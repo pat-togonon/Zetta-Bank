@@ -2,6 +2,7 @@ package com.pattisian.zetta.bank_backend.banks.entity;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.banks.enums.Status;
+import com.pattisian.zetta.bank_backend.common.helpers.Helper;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -34,6 +35,9 @@ public class BankCard {
     @NotNull
     private Status status;
 
+    @Transient
+    private static final String BANK_BIN = "121994";
+
     public BankCard() {
     }
 
@@ -63,10 +67,12 @@ public class BankCard {
         return cardNumber;
     }
 
-    // to work on - Luhn's algo
     @PostPersist
     public void generateCardNumber(String cardNumber) {
-        this.cardNumber = cardNumber;
+        String sequence = String.format("%09d", this.id);
+        String payloadDigits = BANK_BIN + sequence;
+        int checkDigit = Helper.calculateCheckDigit(payloadDigits);
+        this.cardNumber = payloadDigits + checkDigit;
     }
 
     public Instant getIssueDate() {
