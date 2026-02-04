@@ -58,6 +58,7 @@ public class User {
 
     @Column(nullable = false)
     @NotNull
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     @Column(nullable = false)
