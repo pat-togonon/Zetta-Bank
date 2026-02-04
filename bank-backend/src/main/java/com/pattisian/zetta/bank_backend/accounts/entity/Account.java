@@ -53,10 +53,10 @@ public class Account {
     private Instant closedAt;
 
     @Transient
-    private static final String BANK_CODE = "ZT";
+    public static final String BANK_CODE = "ZT";
 
     @Transient
-    private static final String BRANCH_CODE = "001";
+    public static final String BRANCH_CODE = "001";
 
     @Transient
     private String accountTypeCode;
