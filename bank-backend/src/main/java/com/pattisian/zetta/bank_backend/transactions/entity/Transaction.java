@@ -15,6 +15,9 @@ import java.time.Instant;
 // For all status, might need better checks. If Id is generated, PostConstruct Status e.g
 
 // Also check out @EntityListeners(AuditingEntityListener.class)
+
+// For constants - can create a class to store all that
+
 @Entity
 @Table(name = "transactions")
 public class Transaction {
