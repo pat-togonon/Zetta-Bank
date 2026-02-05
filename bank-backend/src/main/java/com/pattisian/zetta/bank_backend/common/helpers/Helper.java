@@ -3,12 +3,18 @@ package com.pattisian.zetta.bank_backend.common.helpers;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 public class Helper {
 
+    public static String generateNumberSequence() {
+        UUID uuid = UUID.randomUUID();
+        return String.valueOf(Math.abs(uuid.getMostSignificantBits())).substring(0, 9);
+    }
 
-    public static String generateAccountNumber(Long id, String accountTypeCode, String bankCode, String branchCode, Instant dateOpened) {
-        String sequence = String.format("%08d", id);
+    public static String generateAccountNumber(String accountTypeCode, String bankCode, String branchCode, Instant dateOpened) {
+
+        String sequence = generateNumberSequence();
         int yearOpened = extractYear(dateOpened);
         String accountNumber = String.format("%s-%s-%s-%s-%s", accountTypeCode, bankCode, branchCode, yearOpened, sequence);
 

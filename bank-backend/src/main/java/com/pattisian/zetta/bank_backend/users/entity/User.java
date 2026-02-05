@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Period;
 
 @Entity
 @Table(name = "users")
@@ -24,9 +25,7 @@ public class User {
     @NotBlank(message = "First name is required")
     private String firstName;
 
-    @Column(name = "middle_name", nullable = false)
-    @Size(min = 2, max = 50, message = "Must be between 2 and 50 characters")
-    @NotBlank(message = "Middle name is required")
+    @Column(name = "middle_name")
     private String middleName;
 
     @Column(name = "last_name", nullable = false)
@@ -199,7 +198,6 @@ public class User {
                 ", email='" + email + '\'' +
                 ", mobile='" + mobile + '\'' +
                 ", username='" + username + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
                 ", status=" + status +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
@@ -210,6 +208,6 @@ public class User {
         LocalDate today = LocalDate.now();
         int difference = dateOfBirth.compareTo(today);
 
-        return difference >= LEGAL_AGE;
+        return Period.between(dateOfBirth, today).getYears() >= LEGAL_AGE;
     }
 }

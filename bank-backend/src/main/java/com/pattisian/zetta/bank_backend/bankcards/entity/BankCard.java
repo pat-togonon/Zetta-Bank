@@ -17,13 +17,18 @@ public class BankCard {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "primary_account_id", nullable = false, unique = true)
     @NotNull
     private Account primaryAccount;
 
-    @Column(name = "card_number_hash")
+    @Column(name = "card_number_hash") //  nullable = false
+    // @NotBlank
     private String cardNumberHash;
+
+    @Column(name = "cvv_hash") //  nullable = false
+    // @NotBlank
+    private String cvvHash;
 
     @Column(name = "card_number_last_four_digits")
     private String cardNumberLastFourDigits;
@@ -57,6 +62,8 @@ public class BankCard {
                 .atZone(ZoneId.of("Asia/Manila"))
                 .plusYears(3)
                 .toInstant();
+        this.bankCardNumber = this.generateCardNumber();
+        this.setCardNumberLastFourDigits();
     }
 
     public Long getId() {
@@ -79,11 +86,19 @@ public class BankCard {
         return cardNumberHash;
     }
 
-    public void generateCardNumber() {
-        String sequence = String.format("%09d", this.id);
+    public String generateCardNumber() {
+        String sequence = Helper.generateNumberSequence();
         String payloadDigits = BANK_BIN + sequence;
         int checkDigit = Helper.calculateCheckDigit(payloadDigits);
-        this.bankCardNumber = payloadDigits + checkDigit;
+        return payloadDigits + checkDigit;
+    }
+
+    public String getCvvHash() {
+        return cvvHash;
+    }
+
+    public void setCvvHash() {
+        //password encoder here - to follow. Need to set up Security first. Will work on my entities first.
     }
 
     public Instant getIssueDate() {
@@ -110,12 +125,7 @@ public class BankCard {
         this.status = status;
     }
 
-    @PostPersist
     public void setCardNumberHash() {
-        this.generateCardNumber();
-        setCardNumberLastFourDigits();
-        this.cardNumberHash = "Wait ah";
-
        //password encoder here - to follow. Need to set up Security first. Will work on my entities first.
     }
 
@@ -125,7 +135,7 @@ public class BankCard {
 
     public void setCardNumberLastFourDigits() {
         int n = this.bankCardNumber.length();
-        this.cardNumberLastFourDigits = this.bankCardNumber.substring(n - 5, n - 1);
+        this.cardNumberLastFourDigits = this.bankCardNumber.substring(n - 4);
     }
 
     public String getBankCardNumber() {
@@ -138,7 +148,7 @@ public class BankCard {
         return "BankCard{" +
                 "id=" + id +
                 ", primaryAccount=" + primaryAccount +
-                ", cardNumberHash='" + cardNumberHash + '\'' +
+                ", cardNumberLastFourDigits='" + cardNumberLastFourDigits + '\'' +
                 ", issueDate=" + issueDate +
                 ", expirationDate=" + expirationDate +
                 ", status=" + status +

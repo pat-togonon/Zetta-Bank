@@ -7,6 +7,7 @@ import com.pattisian.zetta.bank_backend.transactions.enums.Status;
 import com.pattisian.zetta.bank_backend.transactions.enums.TransactionType;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -31,7 +32,8 @@ public class Transaction {
     @Column(name = "type", nullable = false)
     private TransactionType type;
 
-    @Column(name = "reference_number", unique = true)
+    @Column(name = "reference_number", unique = true, nullable = false)
+    @NotBlank
     private String referenceNumber; // to derive from id Pat
 
     @Enumerated(EnumType.STRING)
@@ -43,7 +45,6 @@ public class Transaction {
     private User user;
 
     @ManyToOne
-    @NotNull
     @JoinColumn(name = "source_account_id")
     private Account sourceAccount;
 
@@ -91,6 +92,10 @@ public class Transaction {
     @NotNull
     private Instant createdAt;
 
+    @Column(name = "ip_address", nullable = false)
+    @NotBlank
+    private String ipAddress;
+
     @Transient
     private static final String TX_CODE = "TX";
 
@@ -117,9 +122,8 @@ public class Transaction {
         return referenceNumber;
     }
 
-    @PostPersist
-    public void generateReferenceNumber() {
-        this.referenceNumber = Helper.generateAccountNumber(this.id, TX_CODE, Account.BANK_CODE, Account.BRANCH_CODE, createdAt);
+    public String generateReferenceNumber() {
+       return Helper.generateAccountNumber(TX_CODE, Account.BANK_CODE, Account.BRANCH_CODE, createdAt);
     }
 
     public Status getStatus() {
@@ -234,6 +238,14 @@ public class Transaction {
         this.createdAt = createdAt;
     }
 
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
     public static class Builder {
 
         private TransactionType type;
@@ -264,26 +276,34 @@ public class Transaction {
 
         private boolean isFraudulent;
 
+        private String ipAddress;
+
         private Instant createdAt;
 
         public Builder(
                 TransactionType type,
-                User user,
                 BigDecimal amount,
-                Account sourceAccount
+                String ipAddress
         ) {
             this.type = type;
-            this.user = user;
-            this.sourceAccount = sourceAccount;
             this.amount = amount;
             this.createdAt = Instant.now();
+            this.ipAddress = ipAddress;
         }
 
         public Builder status(Status status) {
             this.status = status;
             return this;
         }
+        public Builder sourceAccount(Account sourceAccount) {
+            this.sourceAccount = sourceAccount;
+            return this;
+        }
 
+        public Builder user(User user) {
+            this.user = user;
+            return this;
+        }
         public Builder internalFundTransferDestinationAccount(Account internalFundTransferDestinationAccount) {
             this.internalFundTransferDestinationAccount = internalFundTransferDestinationAccount;
             return this;
@@ -336,11 +356,10 @@ public class Transaction {
 
     public static Builder builder(
             TransactionType type,
-            User user,
             BigDecimal amount,
-            Account sourceAccount
+            String ipAddress
     ) {
-        return new Builder(type, user, amount, sourceAccount);
+        return new Builder(type, amount, ipAddress);
     }
 
     private Transaction(Builder builder) {
@@ -358,7 +377,9 @@ public class Transaction {
         this.balanceBeforeTransaction = builder.balanceBeforeTransaction;
         this.balanceAfterTransaction = builder.balanceAfterTransaction;
         this.isFraudulent = builder.isFraudulent;
+        this.ipAddress = builder.ipAddress;
         this.createdAt = builder.createdAt;
+        this.referenceNumber = generateReferenceNumber();
     }
 
 }

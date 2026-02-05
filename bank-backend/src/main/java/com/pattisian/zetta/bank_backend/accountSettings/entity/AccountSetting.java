@@ -169,7 +169,7 @@ public class AccountSetting {
             }
         }
 
-        public static Builder build(Account account) {
+        public static Builder builder(Account account) {
         return new Builder(account);
         }
 
