@@ -11,4 +11,9 @@ public interface AccountService {
     public List<Account> getAllAccounts();
 
     public Account openAccount(OpenAccountRequestDTO request);
+
+
+    public Account getAccountById(Long id);
+
+    public List<Account> getAllAccountsByUserId(Long id);
 }

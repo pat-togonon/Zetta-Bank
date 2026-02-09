@@ -12,7 +12,9 @@ import com.pattisian.zetta.bank_backend.users.entity.Address;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import com.pattisian.zetta.bank_backend.users.service.AddressService;
 import com.pattisian.zetta.bank_backend.users.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -49,6 +51,13 @@ public class AccountServiceImpl implements AccountService {
         return savedAccount;
     }
 
+    @Override
+    public Account getAccountById(Long id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Account with id " + id + " not found."));
+
+    }
+
     private User saveUser(OpenAccountRequestDTO request) {
         User userToSave = new User(request.getUserCreationRequestDTO().getFirstName(), request.getUserCreationRequestDTO().getMiddleName(), request.getUserCreationRequestDTO().getLastName(), request.getUserCreationRequestDTO().getDateOfBirth(), request.getUserCreationRequestDTO().getEmail(), request.getUserCreationRequestDTO().getMobile(), request.getUserCreationRequestDTO().getUsername(), request.getUserCreationRequestDTO().getPassword());
         return userService.createNewUser(userToSave);
@@ -70,5 +79,9 @@ public class AccountServiceImpl implements AccountService {
 
     private AccountSetting saveAccountSetting(Account account) {
         return accountSettingService.saveAccountSetting(account);
+    }
+
+    public List<Account> getAllAccountsByUserId(Long id) {
+        return accountRepository.getAllAccountsByUserId(id);
     }
 }

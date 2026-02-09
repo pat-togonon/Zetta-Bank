@@ -63,6 +63,7 @@ public class BankCard {
                 .plusYears(3)
                 .toInstant();
         this.bankCardNumber = this.generateCardNumber();
+        this.cardNumberHash = this.generateCardNumberHash();
         this.setCardNumberLastFourDigits();
         this.cvvHash = this.generateCvvHash();
     }
@@ -130,8 +131,9 @@ public class BankCard {
         this.status = status;
     }
 
-    public void setCardNumberHash() {
+    public String generateCardNumberHash() {
        //password encoder here - to follow. Need to set up Security first. Will work on my entities first.
+        return this.bankCardNumber + "WillHashSOOn";
     }
 
     public String getCardNumberLastFourDigits() {

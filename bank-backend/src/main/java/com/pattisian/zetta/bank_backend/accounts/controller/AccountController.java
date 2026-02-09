@@ -32,6 +32,21 @@ public class AccountController {
     }
 
     // add a new account - for existing account holder
+    @PostMapping("/new-account")
+    public Account addNewAccount() {
+        // create a request dto for this + service method
+    }
 
+    //get one account by id
+    @GetMapping("/{id}")
+    public Account getAccountById(@PathVariable Long id) {
+        return accountService.getAccountById(id);
+    }
+
+    //get all accounts of a user by their user id
+    @GetMapping("/all/{id}")
+    public List<Account> getAllAccountsByUserId(@PathVariable Long id) {
+        return accountService.getAllAccountsByUserId(id);
+    }
 
 }
