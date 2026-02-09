@@ -64,6 +64,7 @@ public class BankCard {
                 .toInstant();
         this.bankCardNumber = this.generateCardNumber();
         this.setCardNumberLastFourDigits();
+        this.cvvHash = this.generateCvvHash();
     }
 
     public Long getId() {
@@ -97,8 +98,12 @@ public class BankCard {
         return cvvHash;
     }
 
-    public void setCvvHash() {
-        //password encoder here - to follow. Need to set up Security first. Will work on my entities first.
+    public String generateCvv() {
+        return Helper.generateCvv();
+    }
+
+    public String generateCvvHash() {
+        return this.generateCvv() + "waitLangForEncoder";
     }
 
     public Instant getIssueDate() {

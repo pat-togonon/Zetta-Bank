@@ -1,7 +1,9 @@
 package com.pattisian.zetta.bank_backend.users.entity;
 
+import com.pattisian.zetta.bank_backend.users.enums.Country;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -30,24 +32,23 @@ public class Address {
     @NotBlank
     private String city;
 
-    @Column(nullable = false)
-    @Size(min = 11, max = 11) // for the word Philippines
-    @NotBlank
-    private String country;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)// for the word Philippines
+    @NotNull
+    private Country country;
 
-    @Column(name = "zip_code", nullable = false)
-    @Size(min = 4, max = 4) // for the 4-digit Philippines zip codes
+    @Column(name = "zip_code", nullable = false, length = 4)
     private int zipCode;
 
     public Address() {
     }
 
-    public Address(User user, String houseNumber, String street, String city, String country, int zipCode) {
+    public Address(User user, String houseNumber, String street, String city, int zipCode) {
         this.user = user;
         this.houseNumber = houseNumber;
         this.street = street;
         this.city = city;
-        this.country = country;
+        this.country = Country.PHILIPPINES;
         this.zipCode = zipCode;
     }
 
@@ -91,11 +92,11 @@ public class Address {
         this.city = city;
     }
 
-    public String getCountry() {
+    public Country getCountry() {
         return country;
     }
 
-    public void setCountry(String country) {
+    public void setCountry(Country country) {
         this.country = country;
     }
 

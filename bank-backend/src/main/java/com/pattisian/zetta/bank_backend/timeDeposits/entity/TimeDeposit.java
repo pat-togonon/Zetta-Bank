@@ -1,7 +1,6 @@
 package com.pattisian.zetta.bank_backend.timeDeposits.entity;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
-import com.pattisian.zetta.bank_backend.common.exception.TermDurationException;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
 import com.pattisian.zetta.bank_backend.timeDeposits.enums.Status;
 import com.pattisian.zetta.bank_backend.timeDeposits.enums.Term;

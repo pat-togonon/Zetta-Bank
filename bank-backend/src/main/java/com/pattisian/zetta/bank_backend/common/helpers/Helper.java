@@ -2,6 +2,7 @@ package com.pattisian.zetta.bank_backend.common.helpers;
 
 import com.pattisian.zetta.bank_backend.common.ConstantValues;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -11,6 +12,11 @@ public final class Helper {
     //Can't create instance of this class
     private Helper() {
 
+    }
+
+    public static String generateCvv() {
+        UUID uuid = UUID.randomUUID();
+        return String.valueOf(Math.abs(uuid.getMostSignificantBits())).substring(0, 3);
     }
 
     public static String generateNumberSequence() {
@@ -51,5 +57,9 @@ public final class Helper {
         boolean isSumAMultipleOfTen = sum % 10 == 0;
 
         return isSumAMultipleOfTen ? 0 :  (10 - (sum % 10)) % 10;
+    }
+
+    public static boolean isOpeningBalanceEnough(BigDecimal openingAmount) {
+        return ConstantValues.MINIMUM_BALANCE.compareTo(openingAmount) < 0;
     }
 }

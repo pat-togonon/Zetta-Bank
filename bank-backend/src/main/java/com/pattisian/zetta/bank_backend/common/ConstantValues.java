@@ -25,4 +25,6 @@ public final class ConstantValues {
     public static final BigDecimal DAILY_EXTERNAL_FUND_TRANSFER_AMOUNT_LIMIT = new BigDecimal("100000");
 
     public static final ZoneId BANK_ZONE = ZoneId.of("Asia/Manila");
+
+    public static final BigDecimal MINIMUM_BALANCE = new BigDecimal(2000);
 }

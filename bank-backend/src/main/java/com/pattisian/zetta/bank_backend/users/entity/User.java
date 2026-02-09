@@ -73,7 +73,7 @@ public class User {
 
     }
 
-    public User(String firstName, String middleName, String lastName, LocalDate dateOfBirth, String email, String mobile, String username, String passwordHash, Status status) {
+    public User(String firstName, String middleName, String lastName, LocalDate dateOfBirth, String email, String mobile, String username, String password) {
 
         if (!isAdult(dateOfBirth)) {
             throw new AgeRequirementException(LEGAL_AGE);
@@ -86,8 +86,8 @@ public class User {
         this.email = email;
         this.mobile = mobile;
         this.username = username;
-        this.passwordHash = passwordHash;
-        this.status = status;
+        setPasswordHash(password);
+        this.status = Status.ACTIVE;
         this.createdAt = Instant.now();
     }
 
@@ -159,8 +159,8 @@ public class User {
         return passwordHash;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPasswordHash(String password) {
+        this.passwordHash = password + "noEncoderYetSoToFollowPlease";
     }
 
     public Status getStatus() {
