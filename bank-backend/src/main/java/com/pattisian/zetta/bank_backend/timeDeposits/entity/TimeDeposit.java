@@ -80,27 +80,12 @@ public class TimeDeposit {
     }
 
     public TimeDeposit(User user, Term termMonths, Account sourceAccount, Account payoutAccount, BigDecimal principal, boolean isAutoRenew) {
-        BigDecimal interestRate;
-        switch(termMonths) {
-            case THREE_MONTHS:
-                interestRate = Term.THREE_MONTHS.getInterestRatePerAnnum();
-                break;
-            case SIX_MONTHS:
-                interestRate = Term.SIX_MONTHS.getInterestRatePerAnnum();
-                break;
-            case TWELVE_MONTHS:
-                interestRate = Term.TWELVE_MONTHS.getInterestRatePerAnnum();
-                break;
-            default:
-                throw new TermDurationException("Invalid term");
-        }
-
         this.user = user;
         this.principal = principal;
         this.termMonths = termMonths;
         this.sourceAccount = sourceAccount;
         this.payoutAccount = payoutAccount;
-        this.interestRatePerAnnum = interestRate;
+        this.interestRatePerAnnum = termMonths.getInterestRatePerAnnum();
         this.status = Status.ACTIVE;
         this.valueDate = Instant.now();
         this.maturityDate = this.valueDate.atZone(ZoneId.of("Asia/Manila"))

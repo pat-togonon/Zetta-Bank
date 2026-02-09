@@ -300,51 +300,51 @@ public class Transaction {
             return this;
         }
 
-        public Builder user(User user) {
+        public Builder setUser(User user) {
             this.user = user;
             return this;
         }
-        public Builder internalFundTransferDestinationAccount(Account internalFundTransferDestinationAccount) {
+        public Builder setInternalFundTransferDestinationAccount(Account internalFundTransferDestinationAccount) {
             this.internalFundTransferDestinationAccount = internalFundTransferDestinationAccount;
             return this;
         }
 
-        public Builder externalDestinationBankId(Long externalDestinationBankId) {
+        public Builder setExternalDestinationBankId(Long externalDestinationBankId) {
             this.externalDestinationBankId = externalDestinationBankId;
             return this;
         }
 
-        public Builder externalDestinationAccountNumber(String externalDestinationAccountNumber) {
+        public Builder setExternalDestinationAccountNumber(String externalDestinationAccountNumber) {
             this.externalDestinationAccountNumber = externalDestinationAccountNumber;
             return this;
         }
 
-        public Builder externalDestinationAccountName(String externalDestinationAccountName) {
+        public Builder setExternalDestinationAccountName(String externalDestinationAccountName) {
             this.externalDestinationAccountName = externalDestinationAccountName;
             return this;
         }
 
-        public Builder billerId(Long billerId) {
+        public Builder setBillerId(Long billerId) {
             this.billerId = billerId;
             return this;
         }
 
-        public Builder relatedTimeDeposit(TimeDeposit relatedTimeDeposit) {
+        public Builder setRelatedTimeDeposit(TimeDeposit relatedTimeDeposit) {
             this.relatedTimeDeposit = relatedTimeDeposit;
             return this;
         }
 
-        public Builder balanceBeforeTransaction(BigDecimal balanceBeforeTransaction) {
+        public Builder setBalanceBeforeTransaction(BigDecimal balanceBeforeTransaction) {
             this.balanceBeforeTransaction = balanceBeforeTransaction;
             return this;
         }
 
-        public Builder balanceAfterTransaction(BigDecimal balanceAfterTransaction) {
+        public Builder setBalanceAfterTransaction(BigDecimal balanceAfterTransaction) {
             this.balanceAfterTransaction = balanceAfterTransaction;
             return this;
         }
 
-        public Builder isFraudulent(boolean isFraudulent) {
+        public Builder setIsFraudulent(boolean isFraudulent) {
             this.isFraudulent = isFraudulent;
             return this;
         }

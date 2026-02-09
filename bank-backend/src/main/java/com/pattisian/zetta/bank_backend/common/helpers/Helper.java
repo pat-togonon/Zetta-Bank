@@ -1,11 +1,17 @@
 package com.pattisian.zetta.bank_backend.common.helpers;
 
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
+
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-public class Helper {
+public final class Helper {
+
+    //Can't create instance of this class
+    private Helper() {
+
+    }
 
     public static String generateNumberSequence() {
         UUID uuid = UUID.randomUUID();
@@ -22,7 +28,7 @@ public class Helper {
     }
 
     public static int extractYear(Instant date) {
-        ZonedDateTime zdt = date.atZone(ZoneId.of("Asia/Manila"));
+        ZonedDateTime zdt = date.atZone(ConstantValues.BANK_ZONE);
         return zdt.getYear();
     }
 
