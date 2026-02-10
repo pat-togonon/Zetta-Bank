@@ -27,4 +27,7 @@ public final class ConstantValues {
     public static final ZoneId BANK_ZONE = ZoneId.of("Asia/Manila");
 
     public static final BigDecimal MINIMUM_BALANCE = new BigDecimal(2000);
+
+    public static final int MAX_NUMBER_OF_ACCOUNTS = 2;
+
 }

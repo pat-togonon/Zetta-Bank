@@ -1,8 +1,8 @@
 package com.pattisian.zetta.bank_backend.accounts.service;
 
+import com.pattisian.zetta.bank_backend.accounts.dto.NewAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.dto.OpenAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
-import com.pattisian.zetta.bank_backend.users.entity.User;
 
 import java.util.List;
 
@@ -15,5 +15,7 @@ public interface AccountService {
 
     public Account getAccountById(Long id);
 
-    public List<Account> getAllAccountsByUserId(Long id);
+    public List<Account> getAllAccountsByUser();
+
+    public Account addNewAccount(NewAccountRequestDTO request);
 }

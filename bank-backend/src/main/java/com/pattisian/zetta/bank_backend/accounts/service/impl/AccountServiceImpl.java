@@ -2,21 +2,27 @@ package com.pattisian.zetta.bank_backend.accounts.service.impl;
 
 import com.pattisian.zetta.bank_backend.accountSettings.entity.AccountSetting;
 import com.pattisian.zetta.bank_backend.accountSettings.service.AccountSettingService;
+import com.pattisian.zetta.bank_backend.accounts.dto.NewAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.dto.OpenAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
+import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
 import com.pattisian.zetta.bank_backend.accounts.repository.AccountRepository;
 import com.pattisian.zetta.bank_backend.accounts.service.AccountService;
 import com.pattisian.zetta.bank_backend.bankcards.entity.BankCard;
 import com.pattisian.zetta.bank_backend.bankcards.service.BankCardService;
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
+import com.pattisian.zetta.bank_backend.common.enums.Currency;
+import com.pattisian.zetta.bank_backend.common.exception.MaximumAccountReachedException;
+import com.pattisian.zetta.bank_backend.common.helpers.SecurityUtil;
 import com.pattisian.zetta.bank_backend.users.entity.Address;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import com.pattisian.zetta.bank_backend.users.service.AddressService;
 import com.pattisian.zetta.bank_backend.users.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -44,7 +50,7 @@ public class AccountServiceImpl implements AccountService {
     public Account openAccount(OpenAccountRequestDTO request) {
         User savedUser = this.saveUser(request);
         Address savedAddress = saveAddress(savedUser, request);
-        Account savedAccount = saveAccount(savedUser, request);
+        Account savedAccount = saveAccount(savedUser, request.getAccountType(), request.getAvailableBalance(), request.getCurrency());
         this.createBankCard(savedAccount);
         this.saveAccountSetting(savedAccount);
 
@@ -68,8 +74,8 @@ public class AccountServiceImpl implements AccountService {
         return addressService.saveAddress(addressToSave);
     }
 
-    private Account saveAccount(User user, OpenAccountRequestDTO request) {
-        Account accountToSave = new Account(request.getAccountType(), request.getAvailableBalance(), user, request.getCurrency());
+    private Account saveAccount(User user, AccountType accountType, BigDecimal availableBalance, Currency currency) {
+        Account accountToSave = new Account(accountType, availableBalance, user, currency);
         return accountRepository.save(accountToSave);
     }
 
@@ -81,7 +87,27 @@ public class AccountServiceImpl implements AccountService {
         return accountSettingService.saveAccountSetting(account);
     }
 
-    public List<Account> getAllAccountsByUserId(Long id) {
-        return accountRepository.getAllAccountsByUserId(id);
+    public List<Account> getAllAccountsByUser() {
+        String username = SecurityUtil.getLoggedInUsername();
+        Long userId = userService.getUserByUsername(username).getId();
+        return accountRepository.getAllAccountsByUserId(userId);
     }
+
+    @Override
+    public Account addNewAccount(NewAccountRequestDTO request) {
+        String username = SecurityUtil.getLoggedInUsername();
+        User user = userService.getUserByUsername(username);
+        Long userId = user.getId();
+
+        int accountCount = accountRepository.getUserAccountTotalByAccountType(user, request.getAccountType());
+        if (accountCount == ConstantValues.MAX_NUMBER_OF_ACCOUNTS) {
+            throw new MaximumAccountReachedException("You have reached the maximum number of " + request.getAccountType().toString().toLowerCase() + " account allowed.");
+        }
+        Account accountSaved = this.saveAccount(user, request.getAccountType(), request.getAvailableBalance(), request.getCurrency());
+        this.saveAccountSetting(accountSaved);
+
+        return accountSaved;
+    }
+
+
 }

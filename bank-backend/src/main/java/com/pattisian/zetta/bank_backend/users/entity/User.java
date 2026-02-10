@@ -3,10 +3,7 @@ package com.pattisian.zetta.bank_backend.users.entity;
 import com.pattisian.zetta.bank_backend.common.exception.AgeRequirementException;
 import com.pattisian.zetta.bank_backend.users.enums.Status;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -69,6 +66,14 @@ public class User {
     @Transient
     public static final int LEGAL_AGE = 18;
 
+    @Column(name = "session_active_now", nullable = false)
+    @NotNull
+    private boolean sessionActiveNow;
+
+    @Column(name = "number_of_accounts_owned", nullable = false)
+    @Min(0)
+    private int numberOfAccountsOwned;
+
     public User() {
 
     }
@@ -89,6 +94,8 @@ public class User {
         setPasswordHash(password);
         this.status = Status.ACTIVE;
         this.createdAt = Instant.now();
+        this.sessionActiveNow = false;
+        this.numberOfAccountsOwned = 1;
     }
 
     public Long getId() {
@@ -187,6 +194,22 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    public boolean isSessionActiveNow() {
+        return sessionActiveNow;
+    }
+
+    public void setSessionActiveNow(boolean sessionActiveNow) {
+        this.sessionActiveNow = sessionActiveNow;
+    }
+
+    public int getNumberOfAccountsOwned() {
+        return numberOfAccountsOwned;
+    }
+
+    public void setNumberOfAccountsOwned(int numberOfAccountsOwned) {
+        this.numberOfAccountsOwned = numberOfAccountsOwned;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -198,16 +221,21 @@ public class User {
                 ", email='" + email + '\'' +
                 ", mobile='" + mobile + '\'' +
                 ", username='" + username + '\'' +
+                ", passwordHash='" + passwordHash + '\'' +
                 ", status=" + status +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", sessionActiveNow=" + sessionActiveNow +
+                ", numberOfAccountsOwned=" + numberOfAccountsOwned +
                 '}';
     }
 
+    // Refactor to Helper
     public boolean isAdult(LocalDate dateOfBirth) {
         LocalDate today = LocalDate.now();
         int difference = dateOfBirth.compareTo(today);
 
+        // Refactor LEGAL_AGE to ConstantValues
         return Period.between(dateOfBirth, today).getYears() >= LEGAL_AGE;
     }
 }

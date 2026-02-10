@@ -3,7 +3,6 @@ package com.pattisian.zetta.bank_backend.accounts.entity;
 import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
 import com.pattisian.zetta.bank_backend.accounts.enums.Status;
 import com.pattisian.zetta.bank_backend.common.enums.Currency;
-import com.pattisian.zetta.bank_backend.common.exception.AccountTypeException;
 import com.pattisian.zetta.bank_backend.common.exception.InsufficientBalanceException;
 import com.pattisian.zetta.bank_backend.common.exception.NegativeAmountException;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
@@ -76,26 +75,12 @@ public class Account {
     }
 
     public Account(AccountType accountType, BigDecimal availableBalance, User user, Currency currency) {
-
-        BigDecimal interestRate;
-        switch (accountType) {
-            case SAVINGS:
-                interestRate = AccountType.SAVINGS.getInterestRate();
-                this.accountTypeCode = "SV";
-                break;
-            case CHECKING:
-                interestRate = AccountType.CHECKING.getInterestRate();
-                this.accountTypeCode = "CH";
-                break;
-            default:
-                throw new AccountTypeException("Invalid account type");
-        }
-
         this.accountType = accountType;
+        this.accountTypeCode = accountType.getAccountTypeCode();
         this.availableBalance = availableBalance;
         this.user = user;
         this.status = Status.ACTIVE;
-        this.interestRatePerAnnum = interestRate;
+        this.interestRatePerAnnum = accountType.getInterestRate();
         this.openingDate = Instant.now();
         this.accountNumber = this.generateAccountNumber();
         this.currency = currency;

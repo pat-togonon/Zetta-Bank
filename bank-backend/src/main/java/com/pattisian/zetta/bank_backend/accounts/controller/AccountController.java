@@ -1,5 +1,6 @@
 package com.pattisian.zetta.bank_backend.accounts.controller;
 
+import com.pattisian.zetta.bank_backend.accounts.dto.NewAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.dto.OpenAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.accounts.service.AccountService;
@@ -33,8 +34,8 @@ public class AccountController {
 
     // add a new account - for existing account holder
     @PostMapping("/new-account")
-    public Account addNewAccount() {
-        // create a request dto for this + service method
+    public Account addNewAccount(@RequestBody NewAccountRequestDTO request) {
+        return accountService.addNewAccount(request);
     }
 
     //get one account by id
@@ -43,10 +44,10 @@ public class AccountController {
         return accountService.getAccountById(id);
     }
 
-    //get all accounts of a user by their user id
-    @GetMapping("/all/{id}")
-    public List<Account> getAllAccountsByUserId(@PathVariable Long id) {
-        return accountService.getAllAccountsByUserId(id);
+    //get all accounts of a user
+    @GetMapping("/all")
+    public List<Account> getAllAccountsByUser() {
+        return accountService.getAllAccountsByUser();
     }
 
 }
