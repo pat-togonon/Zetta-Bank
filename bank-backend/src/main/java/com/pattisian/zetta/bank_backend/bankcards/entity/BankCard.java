@@ -3,10 +3,12 @@ package com.pattisian.zetta.bank_backend.bankcards.entity;
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.bankcards.enums.Status;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
+import com.pattisian.zetta.bank_backend.users.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 
 @Entity
@@ -21,6 +23,11 @@ public class BankCard {
     @JoinColumn(name = "primary_account_id", nullable = false, unique = true)
     @NotNull
     private Account primaryAccount;
+
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @NotNull
+    private User user;
 
     @Column(name = "card_number_hash") //  nullable = false
     // @NotBlank
@@ -51,11 +58,15 @@ public class BankCard {
     @Transient
     private String bankCardNumber;
 
+    @Column(name = "last_updated_at")
+    private Instant lastUpdatedAt;
+
     public BankCard() {
     }
 
-    public BankCard(Account primaryAccount) {
+    public BankCard(Account primaryAccount, User user) {
         this.primaryAccount = primaryAccount;
+        this.user = user;
         this.status = Status.ACTIVE;
         this.issueDate = Instant.now();
         this.expirationDate = this.issueDate
@@ -82,6 +93,14 @@ public class BankCard {
 
     public void setPrimaryAccount(Account primaryAccount) {
         this.primaryAccount = primaryAccount;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getCardNumberHash() {
@@ -149,16 +168,31 @@ public class BankCard {
         return bankCardNumber;
     }
 
+    public Instant getLastUpdatedAt() {
+        return lastUpdatedAt;
+    }
+
+    public void setLastUpdatedAt(Instant lastUpdatedAt) {
+        this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    @PreUpdate
+    public void preUpdateLastUpdatedAt() {
+        this.lastUpdatedAt = Instant.now();
+    }
+
 
     @Override
     public String toString() {
         return "BankCard{" +
                 "id=" + id +
                 ", primaryAccount=" + primaryAccount +
+                ", user=" + user +
                 ", cardNumberLastFourDigits='" + cardNumberLastFourDigits + '\'' +
                 ", issueDate=" + issueDate +
                 ", expirationDate=" + expirationDate +
                 ", status=" + status +
+                ", lastUpdatedAt=" + lastUpdatedAt +
                 '}';
     }
 }

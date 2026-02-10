@@ -5,6 +5,7 @@ import com.pattisian.zetta.bank_backend.accounts.dto.OpenAccountRequestDTO;
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.accounts.service.AccountService;
 import com.pattisian.zetta.bank_backend.users.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,12 +13,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/accounts")
 public class AccountController {
-    private final AccountService accountService;
-    private final UserService userService;
+    private AccountService accountService;
 
-    public AccountController(AccountService accountService, UserService userService) {
+    public AccountController(AccountService accountService) {
         this.accountService = accountService;
-        this.userService = userService;
     }
 
     /* for admin - next phase
@@ -28,7 +27,7 @@ public class AccountController {
     */
 
     // open a new account - for new applications / non-account holder
-    @PostMapping()
+    @PostMapping("/open-account")
     public Account openAccount(@RequestBody OpenAccountRequestDTO requestDTO) {
         return accountService.openAccount(requestDTO);
 

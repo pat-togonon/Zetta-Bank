@@ -9,7 +9,7 @@ import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
 import com.pattisian.zetta.bank_backend.accounts.repository.AccountRepository;
 import com.pattisian.zetta.bank_backend.accounts.service.AccountService;
 import com.pattisian.zetta.bank_backend.bankcards.entity.BankCard;
-import com.pattisian.zetta.bank_backend.bankcards.service.BankCardService;
+import com.pattisian.zetta.bank_backend.bankcards.service.BankCardAccountService;
 import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.enums.Currency;
 import com.pattisian.zetta.bank_backend.common.exception.MaximumAccountReachedException;
@@ -30,16 +30,19 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final UserService userService;
     private final AddressService addressService;
-    private final BankCardService bankCardService;
     private final AccountSettingService accountSettingService;
+    private final BankCardAccountService bankCardAccountService;
 
-    public AccountServiceImpl(AccountRepository accountRepository, UserService userService, AddressService addressService, BankCardService bankCardService, AccountSettingService accountSettingService) {
+    public AccountServiceImpl(AccountRepository accountRepository, UserService userService, AddressService addressService, AccountSettingService accountSettingService, BankCardAccountService bankCardAccountService) {
         this.accountRepository = accountRepository;
         this.userService = userService;
         this.addressService = addressService;
-        this.bankCardService = bankCardService;
         this.accountSettingService = accountSettingService;
+        this.bankCardAccountService = bankCardAccountService;
+
     }
+
+
 /* for admin - next phase + paginated
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
@@ -53,7 +56,7 @@ public class AccountServiceImpl implements AccountService {
         User savedUser = this.saveUser(request);
         Address savedAddress = saveAddress(savedUser, request);
         Account savedAccount = saveAccount(savedUser, request.getAccountType(), request.getAvailableBalance(), request.getCurrency());
-        this.createBankCard(savedAccount);
+        this.createBankCard(savedAccount, savedUser);
         this.saveAccountSetting(savedAccount);
 
         return savedAccount;
@@ -63,8 +66,8 @@ public class AccountServiceImpl implements AccountService {
     public Account getAccountById(Long id) {
         User user = this.extractLoggedInUser();
 
-        return accountRepository.getAccountById(user, id)
-                .orElseThrow(() -> new EntityNotFoundException("Your account with an id " + id + " is not found."));
+        return accountRepository.getAccountById(id, user)
+                .orElseThrow(() -> new EntityNotFoundException("Account with an id " + id + " is not found."));
 
     }
 
@@ -83,8 +86,8 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.save(accountToSave);
     }
 
-    private BankCard createBankCard(Account account) {
-        return bankCardService.createNewBankCard(account);
+    private BankCard createBankCard(Account account, User user) {
+        return bankCardAccountService.createNewBankCard(account, user);
     }
 
     private AccountSetting saveAccountSetting(Account account) {
@@ -99,8 +102,6 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account addNewAccount(NewAccountRequestDTO request) {
         User user = this.extractLoggedInUser();
-        Long userId = user.getId();
-
         int accountCount = accountRepository.getUserAccountTotalByAccountType(user, request.getAccountType());
         if (accountCount == ConstantValues.MAX_NUMBER_OF_ACCOUNTS) {
             throw new MaximumAccountReachedException("You have reached the maximum number of " + request.getAccountType().toString().toLowerCase() + " account allowed.");

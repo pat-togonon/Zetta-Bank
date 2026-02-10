@@ -1,7 +1,6 @@
 package com.pattisian.zetta.bank_backend.accounts.dto;
 
 import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
-import com.pattisian.zetta.bank_backend.accounts.enums.BalanceSource;
 import com.pattisian.zetta.bank_backend.common.enums.Currency;
 import com.pattisian.zetta.bank_backend.common.exception.InsufficientBalanceException;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
@@ -17,9 +16,8 @@ public class OpenAccountRequestDTO {
     private Currency currency;
     private UserCreationDetails userCreationDetails;
     private UserAddressDetails userAddressDetails;
-    private BalanceSource balanceSource;
 
-    public OpenAccountRequestDTO(BigDecimal availableBalance, Currency currency, UserCreationDetails userCreationDetails, UserAddressDetails userAddressDetails, BalanceSource balanceSource) {
+    public OpenAccountRequestDTO(BigDecimal availableBalance, Currency currency, UserCreationDetails userCreationDetails, UserAddressDetails userAddressDetails) {
 
         if (!Helper.isOpeningBalanceEnough(availableBalance)) {
             throw new InsufficientBalanceException("Must deposit at least Php2000 to open an account.");
@@ -29,7 +27,6 @@ public class OpenAccountRequestDTO {
         this.currency = currency;
         this.userCreationDetails = userCreationDetails;
         this.userAddressDetails = userAddressDetails;
-        this.balanceSource = balanceSource;
     }
 
     public AccountType getAccountType() {
@@ -72,11 +69,4 @@ public class OpenAccountRequestDTO {
         this.userAddressDetails = userAddressDetails;
     }
 
-    public BalanceSource getBalanceSource() {
-        return balanceSource;
-    }
-
-    public void setBalanceSource(BalanceSource balanceSource) {
-        this.balanceSource = balanceSource;
-    }
 }
