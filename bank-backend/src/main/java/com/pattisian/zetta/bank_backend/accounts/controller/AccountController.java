@@ -20,10 +20,12 @@ public class AccountController {
         this.userService = userService;
     }
 
+    /* for admin - next phase
     @GetMapping()
     public List<Account> getAllAccounts() {
         return accountService.getAllAccounts();
     }
+    */
 
     // open a new account - for new applications / non-account holder
     @PostMapping()
@@ -49,5 +51,9 @@ public class AccountController {
     public List<Account> getAllAccountsByUser() {
         return accountService.getAllAccountsByUser();
     }
+
+    // Update account - accessible for admins only - next phase
+
+    // Delete/close account - go to branch please
 
 }

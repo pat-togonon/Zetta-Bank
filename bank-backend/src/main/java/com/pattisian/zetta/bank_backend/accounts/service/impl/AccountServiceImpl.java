@@ -40,10 +40,12 @@ public class AccountServiceImpl implements AccountService {
         this.bankCardService = bankCardService;
         this.accountSettingService = accountSettingService;
     }
-
+/* for admin - next phase + paginated
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
+
+ */
 
     @Transactional
     @Override
@@ -59,18 +61,20 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account getAccountById(Long id) {
-        return accountRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Account with id " + id + " not found."));
+        User user = this.extractLoggedInUser();
+
+        return accountRepository.getAccountById(user, id)
+                .orElseThrow(() -> new EntityNotFoundException("Your account with an id " + id + " is not found."));
 
     }
 
     private User saveUser(OpenAccountRequestDTO request) {
-        User userToSave = new User(request.getUserCreationRequestDTO().getFirstName(), request.getUserCreationRequestDTO().getMiddleName(), request.getUserCreationRequestDTO().getLastName(), request.getUserCreationRequestDTO().getDateOfBirth(), request.getUserCreationRequestDTO().getEmail(), request.getUserCreationRequestDTO().getMobile(), request.getUserCreationRequestDTO().getUsername(), request.getUserCreationRequestDTO().getPassword());
+        User userToSave = new User(request.getUserCreationRequestDetails().getFirstName(), request.getUserCreationRequestDetails().getMiddleName(), request.getUserCreationRequestDetails().getLastName(), request.getUserCreationRequestDetails().getDateOfBirth(), request.getUserCreationRequestDetails().getEmail(), request.getUserCreationRequestDetails().getMobile(), request.getUserCreationRequestDetails().getUsername(), request.getUserCreationRequestDetails().getPassword());
         return userService.createNewUser(userToSave);
     }
 
     private Address saveAddress(User user, OpenAccountRequestDTO request) {
-        Address addressToSave = new Address(user, request.getUserAddressRequestDTO().getHouseNumber(), request.getUserAddressRequestDTO().getStreet(), request.getUserAddressRequestDTO().getCity(), request.getUserAddressRequestDTO().getZipCode());
+        Address addressToSave = new Address(user, request.getUserAddressRequestDetails().getHouseNumber(), request.getUserAddressRequestDetails().getStreet(), request.getUserAddressRequestDetails().getCity(), request.getUserAddressRequestDetails().getZipCode());
         return addressService.saveAddress(addressToSave);
     }
 
@@ -88,25 +92,29 @@ public class AccountServiceImpl implements AccountService {
     }
 
     public List<Account> getAllAccountsByUser() {
-        String username = SecurityUtil.getLoggedInUsername();
-        Long userId = userService.getUserByUsername(username).getId();
-        return accountRepository.getAllAccountsByUserId(userId);
+        User user = this.extractLoggedInUser();
+        return accountRepository.getAllAccountsByUser(user);
     }
 
     @Override
     public Account addNewAccount(NewAccountRequestDTO request) {
-        String username = SecurityUtil.getLoggedInUsername();
-        User user = userService.getUserByUsername(username);
+        User user = this.extractLoggedInUser();
         Long userId = user.getId();
 
         int accountCount = accountRepository.getUserAccountTotalByAccountType(user, request.getAccountType());
         if (accountCount == ConstantValues.MAX_NUMBER_OF_ACCOUNTS) {
             throw new MaximumAccountReachedException("You have reached the maximum number of " + request.getAccountType().toString().toLowerCase() + " account allowed.");
         }
+        // if balance source is cash, as is. But if account, create outgoing transaction for that account
         Account accountSaved = this.saveAccount(user, request.getAccountType(), request.getAvailableBalance(), request.getCurrency());
         this.saveAccountSetting(accountSaved);
 
         return accountSaved;
+    }
+
+    private User extractLoggedInUser() {
+        String username = SecurityUtil.getLoggedInUsername();
+        return userService.getUserByUsername(username);
     }
 
 

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface AccountService {
 
-    public List<Account> getAllAccounts();
+   // public List<Account> getAllAccounts();
 
     public Account openAccount(OpenAccountRequestDTO request);
 
