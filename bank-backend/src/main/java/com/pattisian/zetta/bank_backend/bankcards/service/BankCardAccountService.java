@@ -9,7 +9,5 @@ public interface BankCardAccountService {
 
     BankCard createNewBankCard(Account account, User user);
 
-    BankCard replaceCard(Long primaryAccountId);
-
-    public Account getAccountById(Long primaryAccountId, User user);
+    Account getAccountById(Long primaryAccountId, User user);
 }

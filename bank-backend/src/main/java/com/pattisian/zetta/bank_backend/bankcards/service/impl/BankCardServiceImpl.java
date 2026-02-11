@@ -1,19 +1,23 @@
 package com.pattisian.zetta.bank_backend.bankcards.service.impl;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
+import com.pattisian.zetta.bank_backend.bankcards.dto.ReplaceBankCardRequestDTO;
 import com.pattisian.zetta.bank_backend.bankcards.dto.UpdateBankCardRequestDTO;
 import com.pattisian.zetta.bank_backend.bankcards.entity.BankCard;
 import com.pattisian.zetta.bank_backend.bankcards.enums.Status;
 import com.pattisian.zetta.bank_backend.bankcards.repository.BankCardRepository;
 import com.pattisian.zetta.bank_backend.bankcards.service.BankCardAccountService;
 import com.pattisian.zetta.bank_backend.bankcards.service.BankCardService;
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.helpers.SecurityUtil;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import com.pattisian.zetta.bank_backend.users.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BankCardServiceImpl implements BankCardService {
@@ -49,6 +53,7 @@ public class BankCardServiceImpl implements BankCardService {
         return bankCardRepository.getAllBankCardsByUser(user, Status.ACTIVE);
     }
 
+    @Transactional
     @Override
     public BankCard updateBankCard(Long id, UpdateBankCardRequestDTO request) {
         BankCard bankCard = this.getBankCardById(id);
@@ -63,6 +68,27 @@ public class BankCardServiceImpl implements BankCardService {
         }
 
         return bankCardRepository.save(bankCard);
+    }
+
+    @Transactional
+    @Override
+    public BankCard replaceBankCard(ReplaceBankCardRequestDTO request) {
+        User user = this.extractLoggedInUser();
+        Account validAccount = bankCardAccountService.getAccountById(request.getPrimaryAccountId(), user);
+        Optional<BankCard> previousBankCard = bankCardRepository.getBankCardByUserToDeactivate(user);
+
+        if (previousBankCard.isPresent()) {
+            BankCard prevCard = previousBankCard.get();
+            prevCard.setStatus(Status.DEACTIVATED);
+            bankCardRepository.save(prevCard);
+        }
+
+        // validAccount.deductAmountFromBalance(); - deduct 200 - but account can be different. Can also be cash so check first
+        // create a new outgoing transaction to reflect this 200
+
+        BankCard replacementCardToSave = new BankCard(validAccount, user);
+
+        return bankCardRepository.save(replacementCardToSave);
     }
 
     // This one repeats. Try as AOP

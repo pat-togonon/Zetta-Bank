@@ -1,5 +1,6 @@
 package com.pattisian.zetta.bank_backend.bankcards.controller;
 
+import com.pattisian.zetta.bank_backend.bankcards.dto.ReplaceBankCardRequestDTO;
 import com.pattisian.zetta.bank_backend.bankcards.dto.UpdateBankCardRequestDTO;
 import com.pattisian.zetta.bank_backend.bankcards.entity.BankCard;
 import com.pattisian.zetta.bank_backend.bankcards.service.BankCardService;
@@ -40,9 +41,9 @@ public class BankCardController {
         return bankCardService.updateBankCard(id, request);
     }
 
-    @PostMapping("/bank-card-replacement")
-    public BankCard replaceBankCard() {
-        return null;
+    @PostMapping("/replacement")
+    public BankCard replaceBankCard(@RequestBody ReplaceBankCardRequestDTO request) {
+        return bankCardService.replaceBankCard(request);
     }
 
 

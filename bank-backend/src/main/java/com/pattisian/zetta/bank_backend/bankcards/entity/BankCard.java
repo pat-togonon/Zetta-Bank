@@ -20,7 +20,7 @@ public class BankCard {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "primary_account_id", nullable = false, unique = true)
+    @JoinColumn(name = "primary_account_id", nullable = false)
     @NotNull
     private Account primaryAccount;
 

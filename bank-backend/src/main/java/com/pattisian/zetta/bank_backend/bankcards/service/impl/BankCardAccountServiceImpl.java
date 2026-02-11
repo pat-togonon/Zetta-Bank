@@ -22,17 +22,10 @@ public class BankCardAccountServiceImpl implements BankCardAccountService {
         this.accountRepository = accountRepository;
     }
 
-
     @Override
     public BankCard createNewBankCard(Account account, User user) {
         BankCard bankCardToCreate = new BankCard(account, user);
         return bankCardRepository.save(bankCardToCreate);
-    }
-
-    @Override
-    public BankCard replaceCard(Long primaryAccountId) {
-
-        return null;
     }
 
     @Override

@@ -17,6 +17,9 @@ public interface BankCardRepository extends JpaRepository<BankCard, Long> {
     @Query("SELECT b FROM BankCard b WHERE b.user = :user AND b.id = :id AND b.status = com.pattisian.zetta.bank_backend.bankcards.enums.Status.ACTIVE")
     Optional<BankCard> getBankCardById(@Param("user") User user, @Param("id") Long id);
 
+    @Query("SELECT b FROM BankCard b WHERE b.user = :user AND b.status = com.pattisian.zetta.bank_backend.bankcards.enums.Status.ACTIVE")
+    Optional<BankCard> getBankCardByUserToDeactivate(@Param("user") User user);
+
     @Query("SELECT b FROM BankCard b WHERE b.user = :user AND b.id = :id")
     Optional<BankCard> getBankCardToUpdateById(@Param("user") User user, @Param("id") Long id);
 
