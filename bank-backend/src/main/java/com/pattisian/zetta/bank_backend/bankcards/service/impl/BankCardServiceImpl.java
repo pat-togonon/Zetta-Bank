@@ -10,6 +10,7 @@ import com.pattisian.zetta.bank_backend.bankcards.service.BankCardAccountService
 import com.pattisian.zetta.bank_backend.bankcards.service.BankCardService;
 import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.helpers.SecurityUtil;
+import com.pattisian.zetta.bank_backend.security.context.AuthenticatedUserProvider;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import com.pattisian.zetta.bank_backend.users.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,14 +26,16 @@ public class BankCardServiceImpl implements BankCardService {
     private final BankCardRepository bankCardRepository;
     private final UserService userService;
     private final BankCardAccountService bankCardAccountService;
+    private final AuthenticatedUserProvider authenticatedUserProvider;
 
-    public BankCardServiceImpl(BankCardRepository bankCardRepository, UserService userService, BankCardAccountService bankCardAccountService) {
+    public BankCardServiceImpl(BankCardRepository bankCardRepository, UserService userService, BankCardAccountService bankCardAccountService, AuthenticatedUserProvider authenticatedUserProvider) {
         this.bankCardRepository = bankCardRepository;
         this.userService = userService;
         this.bankCardAccountService = bankCardAccountService;
+        this.authenticatedUserProvider = authenticatedUserProvider;
     }
 
-/* for admin - with pagination
+    /* for admin - with pagination
     @Override
     public List<BankCard> getAllBankCards() {
         return bankCardRepository.findAll();
@@ -42,14 +45,14 @@ public class BankCardServiceImpl implements BankCardService {
 
     @Override
     public BankCard getBankCardById(Long id) {
-        User user = this.extractLoggedInUser();
+        User user = authenticatedUserProvider.getAuthenticatedUser();
         return bankCardRepository.getBankCardToUpdateById(user, id)
                 .orElseThrow(() -> new EntityNotFoundException("Bank card with an id " + id + " not found."));
     }
 
     @Override
     public List<BankCard> getAllActiveUserBankCards() {
-        User user = this.extractLoggedInUser();
+        User user = authenticatedUserProvider.getAuthenticatedUser();
         return bankCardRepository.getAllBankCardsByUser(user, Status.ACTIVE);
     }
 
@@ -62,7 +65,7 @@ public class BankCardServiceImpl implements BankCardService {
         }
 
         if (request.getPrimaryAccountId() != null) {
-            User user = this.extractLoggedInUser();
+            User user = authenticatedUserProvider.getAuthenticatedUser();
             Account validAccount = bankCardAccountService.getAccountById(request.getPrimaryAccountId(), user);
             bankCard.setPrimaryAccount(validAccount);
         }
@@ -73,7 +76,7 @@ public class BankCardServiceImpl implements BankCardService {
     @Transactional
     @Override
     public BankCard replaceBankCard(ReplaceBankCardRequestDTO request) {
-        User user = this.extractLoggedInUser();
+        User user = authenticatedUserProvider.getAuthenticatedUser();
         Account validAccount = bankCardAccountService.getAccountById(request.getPrimaryAccountId(), user);
         Optional<BankCard> previousBankCard = bankCardRepository.getBankCardByUserToDeactivate(user);
 
@@ -90,12 +93,5 @@ public class BankCardServiceImpl implements BankCardService {
 
         return bankCardRepository.save(replacementCardToSave);
     }
-
-    // This one repeats. Try as AOP
-    private User extractLoggedInUser() {
-        String username = SecurityUtil.getLoggedInUsername();
-        return userService.getUserByUsername(username);
-    }
-
 
 }

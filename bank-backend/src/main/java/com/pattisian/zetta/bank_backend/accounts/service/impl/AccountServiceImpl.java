@@ -14,6 +14,7 @@ import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.enums.Currency;
 import com.pattisian.zetta.bank_backend.common.exception.MaximumAccountReachedException;
 import com.pattisian.zetta.bank_backend.common.helpers.SecurityUtil;
+import com.pattisian.zetta.bank_backend.security.context.AuthenticatedUserProvider;
 import com.pattisian.zetta.bank_backend.users.entity.Address;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import com.pattisian.zetta.bank_backend.users.service.AddressService;
@@ -32,18 +33,18 @@ public class AccountServiceImpl implements AccountService {
     private final AddressService addressService;
     private final AccountSettingService accountSettingService;
     private final BankCardAccountService bankCardAccountService;
+    private final AuthenticatedUserProvider authenticatedUserProvider;
 
-    public AccountServiceImpl(AccountRepository accountRepository, UserService userService, AddressService addressService, AccountSettingService accountSettingService, BankCardAccountService bankCardAccountService) {
+    public AccountServiceImpl(AccountRepository accountRepository, UserService userService, AddressService addressService, AccountSettingService accountSettingService, BankCardAccountService bankCardAccountService, AuthenticatedUserProvider authenticatedUserProvider) {
         this.accountRepository = accountRepository;
         this.userService = userService;
         this.addressService = addressService;
         this.accountSettingService = accountSettingService;
         this.bankCardAccountService = bankCardAccountService;
-
+        this.authenticatedUserProvider = authenticatedUserProvider;
     }
 
-
-/* for admin - next phase + paginated
+    /* for admin - next phase + paginated
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
@@ -64,7 +65,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account getAccountById(Long id) {
-        User user = this.extractLoggedInUser();
+        User user = authenticatedUserProvider.getAuthenticatedUser();
 
         return accountRepository.getAccountById(id, user)
                 .orElseThrow(() -> new EntityNotFoundException("Account with an id " + id + " is not found."));
@@ -95,13 +96,13 @@ public class AccountServiceImpl implements AccountService {
     }
 
     public List<Account> getAllAccountsByUser() {
-        User user = this.extractLoggedInUser();
+        User user = authenticatedUserProvider.getAuthenticatedUser();
         return accountRepository.getAllAccountsByUser(user);
     }
 
     @Override
     public Account addNewAccount(NewAccountRequestDTO request) {
-        User user = this.extractLoggedInUser();
+        User user = authenticatedUserProvider.getAuthenticatedUser();
         int accountCount = accountRepository.getUserAccountTotalByAccountType(user, request.getAccountType());
         if (accountCount == ConstantValues.MAX_NUMBER_OF_ACCOUNTS) {
             throw new MaximumAccountReachedException("You have reached the maximum number of " + request.getAccountType().toString().toLowerCase() + " account allowed.");
@@ -111,11 +112,6 @@ public class AccountServiceImpl implements AccountService {
         this.saveAccountSetting(accountSaved);
 
         return accountSaved;
-    }
-
-    private User extractLoggedInUser() {
-        String username = SecurityUtil.getLoggedInUsername();
-        return userService.getUserByUsername(username);
     }
 
 
