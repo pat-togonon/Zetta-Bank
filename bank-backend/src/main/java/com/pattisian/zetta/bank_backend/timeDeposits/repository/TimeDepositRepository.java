@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface TimeDepositRepository extends JpaRepository<TimeDeposit, Long> {
     /*
-    addTimeDeposit - CREATE/POST/SAVE
+    openTimeDeposit - CREATE/POST/SAVE
     preTerminate - UPDATE
     getAllTimeDeposits - for admin + paginated
     getTimeDepositById - for user (user id + time depo id) + admin

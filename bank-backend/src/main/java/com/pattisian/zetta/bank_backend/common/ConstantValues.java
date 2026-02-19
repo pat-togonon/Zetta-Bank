@@ -30,4 +30,8 @@ public final class ConstantValues {
 
     public static final int MAX_NUMBER_OF_ACCOUNTS = 2;
 
+    public static final BigDecimal MIN_TD_PRINCIPAL = new BigDecimal(5000);
+
+    public static final BigDecimal WITHHOLDING_TAX = new BigDecimal("0.20");
+
 }

@@ -106,8 +106,9 @@ public class TimeDeposit {
         return principal;
     }
 
-    public void setPrincipal(BigDecimal principal) {
-        this.principal = principal;
+    public void closeTimeDeposit(Status status) {
+        this.principal = new BigDecimal("0");
+        this.status = status;
     }
 
     public String getReferenceNumber() {

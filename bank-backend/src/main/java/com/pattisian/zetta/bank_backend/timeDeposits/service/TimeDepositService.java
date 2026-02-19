@@ -8,7 +8,7 @@ import java.util.List;
 public interface TimeDepositService {
 
      /*
-    addTimeDeposit - CREATE/POST/SAVE
+    openTimeDeposit - CREATE/POST/SAVE
     preTerminate - UPDATE
     getAllTimeDeposits - for admin + paginated
     getTimeDepositById - for user (user id + time depo id) + admin
@@ -19,7 +19,7 @@ public interface TimeDepositService {
     terminateTimeDeposit - Scheduled (private method) with taxes - UPDATE
      */
 
-    TimeDeposit addTimeDeposit(NewTimeDepositRequestDTO request);
+    TimeDeposit openTimeDeposit(NewTimeDepositRequestDTO request);
     TimeDeposit preTerminate(Long id);
     List<TimeDeposit> getAllTimeDeposits();
     TimeDeposit getTimeDepositById(Long id);
