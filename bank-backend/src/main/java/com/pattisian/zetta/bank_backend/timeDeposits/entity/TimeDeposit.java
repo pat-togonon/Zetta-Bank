@@ -1,6 +1,7 @@
 package com.pattisian.zetta.bank_backend.timeDeposits.entity;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
 import com.pattisian.zetta.bank_backend.timeDeposits.enums.Status;
 import com.pattisian.zetta.bank_backend.timeDeposits.enums.Term;
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 
 @Entity
@@ -37,7 +39,7 @@ public class TimeDeposit {
     @Column(name = "term_months")
     @Enumerated(EnumType.STRING)
     @NotNull
-    private Term termMonths;
+    private Term term;
 
     @Column(name = "interest_rate_per_annum", precision = 7, scale = 4)
     @NotNull
@@ -45,11 +47,11 @@ public class TimeDeposit {
 
     @Column(name = "value_date")
     @NotNull
-    private Instant valueDate;
+    private LocalDate valueDate;
 
     @Column(name = "maturity_date")
     @NotNull
-    private Instant maturityDate;
+    private LocalDate maturityDate;
 
     @ManyToOne
     @JoinColumn(name = "source_account_id", nullable = false)
@@ -75,21 +77,35 @@ public class TimeDeposit {
     @Transient
     private static final String TD_TYPE_CODE = "TD";
 
+    @Column(name = "gross_interest_earned", precision = 18, scale = 2)
+    private BigDecimal grossInterestEarned;
+
+    @Column(name = "withholding_tax", precision = 18, scale = 2)
+    private BigDecimal withholdingTax;
+
+    @Column(name = "documentary_stamp_tax", precision = 18, scale = 2)
+    private BigDecimal documentaryStampTax;
+
+    @Column(name = "net_interest_earned", precision = 18, scale = 2)
+    private BigDecimal netInterestEarned;
+
+    @Column(name = "maturity_amount", precision = 18, scale = 2)
+    private BigDecimal maturityAmount;
+
+
     public TimeDeposit() {
     }
 
-    public TimeDeposit(User user, Term termMonths, Account sourceAccount, Account payoutAccount, BigDecimal principal, boolean isAutoRenew) {
+    public TimeDeposit(User user, Term term, Account sourceAccount, Account payoutAccount, BigDecimal principal, boolean isAutoRenew) {
         this.user = user;
         this.principal = principal;
-        this.termMonths = termMonths;
+        this.term = term;
         this.sourceAccount = sourceAccount;
         this.payoutAccount = payoutAccount;
-        this.interestRatePerAnnum = termMonths.getInterestRatePerAnnum();
+        this.interestRatePerAnnum = term.getInterestRatePerAnnum();
         this.status = Status.ACTIVE;
-        this.valueDate = Instant.now();
-        this.maturityDate = this.valueDate.atZone(ZoneId.of("Asia/Manila"))
-                .plusMonths(termMonths.getMonths())
-                .toInstant();
+        this.valueDate = LocalDate.now(ConstantValues.BANK_ZONE);
+        this.maturityDate = this.valueDate.plusMonths(term.getMonths());
         this.referenceNumber = this.generateReferenceNumber();
         this.isAutoRenew = isAutoRenew;
     }
@@ -116,7 +132,8 @@ public class TimeDeposit {
     }
 
     public String generateReferenceNumber() {
-        return Helper.generateAccountNumber(TD_TYPE_CODE, Account.BANK_CODE, Account.BRANCH_CODE, this.valueDate);
+        Instant valueDate = this.valueDate.atStartOfDay(ConstantValues.BANK_ZONE).toInstant();
+        return Helper.generateAccountNumber(TD_TYPE_CODE, Account.BANK_CODE, Account.BRANCH_CODE, valueDate);
     }
 
     public User getUser() {
@@ -127,12 +144,12 @@ public class TimeDeposit {
         this.user = user;
     }
 
-    public Term getTermMonths() {
-        return termMonths;
+    public Term getTerm() {
+        return term;
     }
 
-    public void setTermMonths(Term termMonths) {
-        this.termMonths = termMonths;
+    public void setTerm(Term term) {
+        this.term = term;
     }
 
     public BigDecimal getInterestRatePerAnnum() {
@@ -143,19 +160,19 @@ public class TimeDeposit {
         this.interestRatePerAnnum = interestRatePerAnnum;
     }
 
-    public Instant getValueDate() {
+    public LocalDate getValueDate() {
         return valueDate;
     }
 
-    public void setValueDate(Instant valueDate) {
+    public void setValueDate(LocalDate valueDate) {
         this.valueDate = valueDate;
     }
 
-    public Instant getMaturityDate() {
+    public LocalDate getMaturityDate() {
         return maturityDate;
     }
 
-    public void setMaturityDate(Instant maturityDate) {
+    public void setMaturityDate(LocalDate maturityDate) {
         this.maturityDate = maturityDate;
     }
 
@@ -199,6 +216,46 @@ public class TimeDeposit {
         isAutoRenew = autoRenew;
     }
 
+    public BigDecimal getGrossInterestEarned() {
+        return grossInterestEarned;
+    }
+
+    public void setGrossInterestEarned(BigDecimal grossInterestEarned) {
+        this.grossInterestEarned = grossInterestEarned;
+    }
+
+    public BigDecimal getWithholdingTax() {
+        return withholdingTax;
+    }
+
+    public void setWithholdingTax(BigDecimal withholdingTax) {
+        this.withholdingTax = withholdingTax;
+    }
+
+    public BigDecimal getDocumentaryStampTax() {
+        return documentaryStampTax;
+    }
+
+    public void setDocumentaryStampTax(BigDecimal documentaryStampTax) {
+        this.documentaryStampTax = documentaryStampTax;
+    }
+
+    public BigDecimal getNetInterestEarned() {
+        return netInterestEarned;
+    }
+
+    public void setNetInterestEarned(BigDecimal netInterestEarned) {
+        this.netInterestEarned = netInterestEarned;
+    }
+
+    public BigDecimal getMaturityAmount() {
+        return maturityAmount;
+    }
+
+    public void setMaturityAmount(BigDecimal maturityAmount) {
+        this.maturityAmount = maturityAmount;
+    }
+
     @Override
     public String toString() {
         return "TimeDeposit{" +
@@ -206,7 +263,7 @@ public class TimeDeposit {
                 ", referenceNumber='" + referenceNumber + '\'' +
                 ", user=" + user +
                 ", principal=" + principal +
-                ", termMonths=" + termMonths +
+                ", term=" + term +
                 ", interestRatePerAnnum=" + interestRatePerAnnum +
                 ", valueDate=" + valueDate +
                 ", maturityDate=" + maturityDate +

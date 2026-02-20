@@ -6,10 +6,12 @@ import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.exception.*;
 import com.pattisian.zetta.bank_backend.security.context.AuthenticatedUserProvider;
 import com.pattisian.zetta.bank_backend.timeDeposits.calculation.DocumentaryStampTaxCalculator;
+import com.pattisian.zetta.bank_backend.timeDeposits.calculation.MaturityInterestCalculator;
 import com.pattisian.zetta.bank_backend.timeDeposits.calculation.PreTerminationInterestEarnedCalculator;
 import com.pattisian.zetta.bank_backend.timeDeposits.dto.NewTimeDepositRequestDTO;
 import com.pattisian.zetta.bank_backend.timeDeposits.entity.TimeDeposit;
 import com.pattisian.zetta.bank_backend.timeDeposits.enums.Status;
+import com.pattisian.zetta.bank_backend.timeDeposits.enums.Term;
 import com.pattisian.zetta.bank_backend.timeDeposits.repository.TimeDepositRepository;
 import com.pattisian.zetta.bank_backend.timeDeposits.service.TimeDepositService;
 import com.pattisian.zetta.bank_backend.users.entity.User;
@@ -17,9 +19,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -92,16 +92,17 @@ public class TimeDepositServiceImpl implements TimeDepositService {
         // charge the fees -> need business logic. Penalty fees applied on earned interest rate per unit of time.
         // BigDecimal principalAmount, int termCompletionPercentage, int daysHeld, Term term
         long daysHeld = ChronoUnit.DAYS.between(
-                timeDepositToPreTerminate.getValueDate().atZone(ConstantValues.BANK_ZONE).toLocalDate(),
-                Instant.now().atZone(ConstantValues.BANK_ZONE).toLocalDate()
+                timeDepositToPreTerminate.getValueDate(),
+                LocalDate.now(ConstantValues.BANK_ZONE)
         );
-        long termCompletionPercentage = 100 * daysHeld / (timeDepositToPreTerminate.getTermMonths().getMonths() * 30);
+        long termCompletionPercentage = 100 * daysHeld / (timeDepositToPreTerminate.getTerm().getMonths() * 30);
 
-        BigDecimal grossInterestEarned = PreTerminationInterestEarnedCalculator.calculate(principal, termCompletionPercentage, daysHeld, timeDepositToPreTerminate.getTermMonths());
+        BigDecimal grossInterestEarned = PreTerminationInterestEarnedCalculator.calculate(principal, termCompletionPercentage, daysHeld, timeDepositToPreTerminate.getTerm());
 
         // subtract withholding tax
+        BigDecimal withholdingTax = this.getWithholdingTax(grossInterestEarned);
         BigDecimal netInterestEarned = grossInterestEarned
-                .multiply(new BigDecimal("1").subtract(ConstantValues.WITHHOLDING_TAX));
+                .subtract(withholdingTax);
 
         BigDecimal netPayoutAmount = principal
                 .subtract(dst)
@@ -110,12 +111,19 @@ public class TimeDepositServiceImpl implements TimeDepositService {
         Account payoutAccount = timeDepositToPreTerminate.getPayoutAccount();
         payoutAccount.addAmountToBalance(netPayoutAmount);
 
+        timeDepositToPreTerminate.setGrossInterestEarned(grossInterestEarned);
+        timeDepositToPreTerminate.setDocumentaryStampTax(dst);
+        timeDepositToPreTerminate.setWithholdingTax(withholdingTax);
+        timeDepositToPreTerminate.setNetInterestEarned(netInterestEarned);
+        timeDepositToPreTerminate.setMaturityAmount(netPayoutAmount);
         timeDepositToPreTerminate.closeTimeDeposit(Status.PRE_TERMINATED);
         timeDepositRepository.save(timeDepositToPreTerminate);
         // update TD - amount, status, etc + save
+        // create a tx for this pre-termination -> remaining
+
         // update payout account - amount transferred + save
         accountRepository.save(payoutAccount);
-        // create a transaction + save -> remaining
+        // create a transaction + save this payout-> remaining
         return timeDepositToPreTerminate;
     }
 
@@ -132,4 +140,70 @@ public class TimeDepositServiceImpl implements TimeDepositService {
         return timeDepositRepository.getTimeDepositById(user, id)
                 .orElseThrow(() -> new TimeDepositNotFoundException("Time deposit with an id " + id + " is not found."));
     }
+
+    // scheduled jobs
+    @Transactional
+    private void rollOverTimeDeposits() {
+        // check all TD in db where maturity date == today and isAutoRenew == true
+        LocalDate today = LocalDate.now(ConstantValues.BANK_ZONE);
+        List<TimeDeposit> timeDepositToRollOver = timeDepositRepository.getMaturedTimeDepositToAutoRenew(today);
+        // calculate maturityAmount (principal + maturityInterest)
+        for (TimeDeposit td : timeDepositToRollOver) {
+            // gross maturity interest earned minus withholding tax
+            BigDecimal grossMaturityInterestAmount = MaturityInterestCalculator.calculate(td.getPrincipal(), td.getTerm());
+            BigDecimal withholdingTax = this.getWithholdingTax(grossMaturityInterestAmount);
+            BigDecimal netInterestEarned = grossMaturityInterestAmount.subtract(withholdingTax);
+            BigDecimal maturityAmount = td.getPrincipal()
+                    .add(netInterestEarned);
+
+            TimeDeposit newTdForRollOver = new TimeDeposit(td.getUser(), td.getTerm(), td.getSourceAccount(), td.getPayoutAccount(), maturityAmount, td.isAutoRenew());
+            // create tx for new td - sourceAccount still
+            timeDepositRepository.save(newTdForRollOver);
+            // create tx for closed/matured td - sourceAccount still
+            td.setDocumentaryStampTax(new BigDecimal("0"));
+            td.setGrossInterestEarned(grossMaturityInterestAmount);
+            td.setWithholdingTax(withholdingTax);
+            td.setMaturityAmount(maturityAmount);
+            td.setNetInterestEarned(netInterestEarned);
+            td.closeTimeDeposit(Status.MATURED);
+            timeDepositRepository.save(td);
+        }
+
+    }
+
+    // scheduled jobs
+
+    @Transactional
+    private void terminateMatureTimeDeposits() {
+        LocalDate today = LocalDate.now(ConstantValues.BANK_ZONE);
+        List<TimeDeposit> maturedTimeDepositToTerminate = timeDepositRepository.getMaturedTimeDeposit(today);
+
+        for (TimeDeposit td : maturedTimeDepositToTerminate) {
+            BigDecimal grossMaturityInterestEarned = MaturityInterestCalculator.calculate(td.getPrincipal(), td.getTerm());
+            BigDecimal withholdingTax = this.getWithholdingTax(grossMaturityInterestEarned);
+            BigDecimal netMaturityInterestEarned = grossMaturityInterestEarned.subtract(withholdingTax);
+            BigDecimal maturityAmount = td.getPrincipal().add(netMaturityInterestEarned);
+            Account payoutAccount = td.getPayoutAccount();
+            payoutAccount.addAmountToBalance(maturityAmount);
+            // create tx for this
+            accountRepository.save(payoutAccount);
+
+            td.setGrossInterestEarned(grossMaturityInterestEarned);
+            td.setWithholdingTax(withholdingTax);
+            td.setDocumentaryStampTax(new BigDecimal("0"));
+            td.setNetInterestEarned(netMaturityInterestEarned);
+            td.setMaturityAmount(maturityAmount);
+            td.closeTimeDeposit(Status.MATURED);
+            // create tx for this
+            timeDepositRepository.save(td);
+
+        }
+    }
+
+    private BigDecimal getWithholdingTax(BigDecimal grossMaturityInterestEarned) {
+        return grossMaturityInterestEarned
+                .multiply(ConstantValues.WITHHOLDING_TAX);
+    }
+
+
 }
