@@ -2,7 +2,6 @@ package com.pattisian.zetta.bank_backend.accounts.repository;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
-import com.pattisian.zetta.bank_backend.accounts.enums.Status;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,10 +14,14 @@ import java.util.Optional;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
+    // check locking as well
+    @Query("SELECT a FROM Account a WHERE a.status = com.pattisian.zetta.bank_backend.accounts.enums.Status.ACTIVE")
+    public List<Account> getAllAccounts();
 
-    public List<Account> getAllAccountsByUser(User user);
+    @Query("SELECT a FROM Account a WHERE a.user = :user AND a.status = com.pattisian.zetta.bank_backend.accounts.enums.Status.ACTIVE")
+    public List<Account> getAllAccountsByUser(@Param("user") User user);
 
-    @Query("SELECT COUNT(*) FROM Account a WHERE a.user = :user AND a.accountType = :accountType")
+    @Query("SELECT COUNT(*) FROM Account a WHERE a.user = :user AND a.accountType = :accountType AND a.status = com.pattisian.zetta.bank_backend.accounts.enums.Status.ACTIVE")
     public int getUserAccountTotalByAccountType(@Param("user") User user, @Param("accountType") AccountType accountType);
 
 

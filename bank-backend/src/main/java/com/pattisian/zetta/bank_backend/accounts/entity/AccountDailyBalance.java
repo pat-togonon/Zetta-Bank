@@ -1,10 +1,13 @@
 package com.pattisian.zetta.bank_backend.accounts.entity;
 
+import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "account_daily_balance",
@@ -27,13 +30,18 @@ public class AccountDailyBalance {
 
     @NotNull
     @Column(nullable = false)
-    private Instant date;
+    private LocalDate date;
 
-    public AccountDailyBalance(Long id, Account account, BigDecimal closingBalance) {
-        this.id = id;
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    @Column(name = "account_type")
+    private AccountType accountType;
+
+    public AccountDailyBalance(Account account, BigDecimal closingBalance, AccountType accountType) {
         this.account = account;
         this.closingBalance = closingBalance;
-        this.date = Instant.now();
+        this.date = LocalDate.now(ConstantValues.BANK_ZONE);
+        this.accountType = accountType;
     }
 
     public Long getId() {
@@ -60,11 +68,19 @@ public class AccountDailyBalance {
         this.closingBalance = closingBalance;
     }
 
-    public Instant getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Instant date) {
+    public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public AccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
     }
 }
