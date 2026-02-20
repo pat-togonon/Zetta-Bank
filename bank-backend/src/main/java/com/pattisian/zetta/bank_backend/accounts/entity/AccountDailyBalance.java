@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "account_daily_balance")
+@Table(name = "account_daily_balance",
+        uniqueConstraints = @UniqueConstraint(columnNames = { "account_id", "date"})
+    )
 public class AccountDailyBalance {
 
     @Id
