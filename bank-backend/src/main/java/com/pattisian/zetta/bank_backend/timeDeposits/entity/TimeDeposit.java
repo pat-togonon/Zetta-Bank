@@ -122,9 +122,14 @@ public class TimeDeposit {
         return principal;
     }
 
-    public void closeTimeDeposit(Status status) {
+    public void closeTimeDeposit(Status status, BigDecimal grossInterestEarned, BigDecimal withholdingTax, BigDecimal documentaryStampTax, BigDecimal netInterestEarned, BigDecimal maturityAmount) {
         this.principal = new BigDecimal("0");
         this.status = status;
+        this.grossInterestEarned = grossInterestEarned;
+        this.withholdingTax = withholdingTax;
+        this.documentaryStampTax = documentaryStampTax;
+        this.netInterestEarned = netInterestEarned;
+        this.maturityAmount = maturityAmount;
     }
 
     public String getReferenceNumber() {

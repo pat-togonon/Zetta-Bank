@@ -23,7 +23,9 @@ public interface TimeDepositService {
     TimeDeposit preTerminate(Long id);
     List<TimeDeposit> getAllTimeDeposits();
     TimeDeposit getTimeDepositById(Long id);
+    void processMatureTimeDepositsAndRollOvers();
 
+    // update td - change payout account, set autoRenew = false but only when autoRenew is initially true. Canot update anymore when TD is matured or pre-terminated
 
 
 

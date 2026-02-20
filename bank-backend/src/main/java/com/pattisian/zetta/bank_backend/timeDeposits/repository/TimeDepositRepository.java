@@ -2,7 +2,9 @@ package com.pattisian.zetta.bank_backend.timeDeposits.repository;
 
 import com.pattisian.zetta.bank_backend.timeDeposits.entity.TimeDeposit;
 import com.pattisian.zetta.bank_backend.users.entity.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -26,13 +28,16 @@ public interface TimeDepositRepository extends JpaRepository<TimeDeposit, Long> 
 
     List<TimeDeposit> getAllTimeDepositsByUser(User user);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM TimeDeposit t WHERE t.user = :user AND t.id = :id")
     Optional<TimeDeposit> getTimeDepositById(@Param("user") User user, @Param("id") Long id);
 
-    @Query("SELECT t FROM TimeDeposit t WHERE t.isAutoRenew = TRUE AND t.maturityDate = :maturityDate AND t.status = com.pattisian.zetta.bank_backend.timeDeposits.enums.Status.ACTIVE")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM TimeDeposit t WHERE t.isAutoRenew = TRUE AND t.maturityDate <= :maturityDate AND t.status = com.pattisian.zetta.bank_backend.timeDeposits.enums.Status.ACTIVE")
     List<TimeDeposit> getMaturedTimeDepositToAutoRenew(@Param("maturityDate") LocalDate maturityDate);
 
-    @Query("SELECT t FROM TimeDeposit t WHERE t.maturityDate = :maturityDate AND t.status = com.pattisian.zetta.bank_backend.timeDeposits.enums.Status.ACTIVE")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM TimeDeposit t WHERE t.maturityDate <= :maturityDate AND t.status = com.pattisian.zetta.bank_backend.timeDeposits.enums.Status.ACTIVE AND t.isAutoRenew = FALSE")
     List<TimeDeposit> getMaturedTimeDeposit(@Param("maturityDate") LocalDate maturityDate);
 
 

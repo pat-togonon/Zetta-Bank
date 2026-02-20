@@ -111,12 +111,7 @@ public class TimeDepositServiceImpl implements TimeDepositService {
         Account payoutAccount = timeDepositToPreTerminate.getPayoutAccount();
         payoutAccount.addAmountToBalance(netPayoutAmount);
 
-        timeDepositToPreTerminate.setGrossInterestEarned(grossInterestEarned);
-        timeDepositToPreTerminate.setDocumentaryStampTax(dst);
-        timeDepositToPreTerminate.setWithholdingTax(withholdingTax);
-        timeDepositToPreTerminate.setNetInterestEarned(netInterestEarned);
-        timeDepositToPreTerminate.setMaturityAmount(netPayoutAmount);
-        timeDepositToPreTerminate.closeTimeDeposit(Status.PRE_TERMINATED);
+        timeDepositToPreTerminate.closeTimeDeposit(Status.PRE_TERMINATED, grossInterestEarned, withholdingTax, dst, netInterestEarned, netPayoutAmount);
         timeDepositRepository.save(timeDepositToPreTerminate);
         // update TD - amount, status, etc + save
         // create a tx for this pre-termination -> remaining
@@ -142,7 +137,6 @@ public class TimeDepositServiceImpl implements TimeDepositService {
     }
 
     // scheduled jobs
-    @Transactional
     private void rollOverTimeDeposits() {
         // check all TD in db where maturity date == today and isAutoRenew == true
         LocalDate today = LocalDate.now(ConstantValues.BANK_ZONE);
@@ -160,20 +154,14 @@ public class TimeDepositServiceImpl implements TimeDepositService {
             // create tx for new td - sourceAccount still
             timeDepositRepository.save(newTdForRollOver);
             // create tx for closed/matured td - sourceAccount still
-            td.setDocumentaryStampTax(new BigDecimal("0"));
-            td.setGrossInterestEarned(grossMaturityInterestAmount);
-            td.setWithholdingTax(withholdingTax);
-            td.setMaturityAmount(maturityAmount);
-            td.setNetInterestEarned(netInterestEarned);
-            td.closeTimeDeposit(Status.MATURED);
+
+            td.closeTimeDeposit(Status.MATURED, grossMaturityInterestAmount, withholdingTax, new BigDecimal("0"), netInterestEarned, maturityAmount);
             timeDepositRepository.save(td);
         }
 
     }
 
     // scheduled jobs
-
-    @Transactional
     private void terminateMatureTimeDeposits() {
         LocalDate today = LocalDate.now(ConstantValues.BANK_ZONE);
         List<TimeDeposit> maturedTimeDepositToTerminate = timeDepositRepository.getMaturedTimeDeposit(today);
@@ -188,21 +176,21 @@ public class TimeDepositServiceImpl implements TimeDepositService {
             // create tx for this
             accountRepository.save(payoutAccount);
 
-            td.setGrossInterestEarned(grossMaturityInterestEarned);
-            td.setWithholdingTax(withholdingTax);
-            td.setDocumentaryStampTax(new BigDecimal("0"));
-            td.setNetInterestEarned(netMaturityInterestEarned);
-            td.setMaturityAmount(maturityAmount);
-            td.closeTimeDeposit(Status.MATURED);
+            td.closeTimeDeposit(Status.MATURED, grossMaturityInterestEarned, withholdingTax, new BigDecimal("0"), netMaturityInterestEarned, maturityAmount);
             // create tx for this
             timeDepositRepository.save(td);
-
         }
     }
 
     private BigDecimal getWithholdingTax(BigDecimal grossMaturityInterestEarned) {
         return grossMaturityInterestEarned
                 .multiply(ConstantValues.WITHHOLDING_TAX);
+    }
+
+    @Transactional
+    public void processMatureTimeDepositsAndRollOvers() {
+        this.rollOverTimeDeposits();
+        this.terminateMatureTimeDeposits();
     }
 
 
