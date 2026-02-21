@@ -4,6 +4,7 @@ import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.accounts.repository.AccountRepository;
 import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.exception.*;
+import com.pattisian.zetta.bank_backend.common.helpers.Helper;
 import com.pattisian.zetta.bank_backend.security.context.AuthenticatedUserProvider;
 import com.pattisian.zetta.bank_backend.timeDeposits.calculation.DocumentaryStampTaxCalculator;
 import com.pattisian.zetta.bank_backend.timeDeposits.calculation.MaturityInterestCalculator;
@@ -100,7 +101,7 @@ public class TimeDepositServiceImpl implements TimeDepositService {
         BigDecimal grossInterestEarned = PreTerminationInterestEarnedCalculator.calculate(principal, termCompletionPercentage, daysHeld, timeDepositToPreTerminate.getTerm());
 
         // subtract withholding tax
-        BigDecimal withholdingTax = this.getWithholdingTax(grossInterestEarned);
+        BigDecimal withholdingTax = Helper.getWithholdingTax(grossInterestEarned);
         BigDecimal netInterestEarned = grossInterestEarned
                 .subtract(withholdingTax);
 
@@ -145,7 +146,7 @@ public class TimeDepositServiceImpl implements TimeDepositService {
         for (TimeDeposit td : timeDepositToRollOver) {
             // gross maturity interest earned minus withholding tax
             BigDecimal grossMaturityInterestAmount = MaturityInterestCalculator.calculate(td.getPrincipal(), td.getTerm());
-            BigDecimal withholdingTax = this.getWithholdingTax(grossMaturityInterestAmount);
+            BigDecimal withholdingTax = Helper.getWithholdingTax(grossMaturityInterestAmount);
             BigDecimal netInterestEarned = grossMaturityInterestAmount.subtract(withholdingTax);
             BigDecimal maturityAmount = td.getPrincipal()
                     .add(netInterestEarned);
@@ -168,7 +169,7 @@ public class TimeDepositServiceImpl implements TimeDepositService {
 
         for (TimeDeposit td : maturedTimeDepositToTerminate) {
             BigDecimal grossMaturityInterestEarned = MaturityInterestCalculator.calculate(td.getPrincipal(), td.getTerm());
-            BigDecimal withholdingTax = this.getWithholdingTax(grossMaturityInterestEarned);
+            BigDecimal withholdingTax = Helper.getWithholdingTax(grossMaturityInterestEarned);
             BigDecimal netMaturityInterestEarned = grossMaturityInterestEarned.subtract(withholdingTax);
             BigDecimal maturityAmount = td.getPrincipal().add(netMaturityInterestEarned);
             Account payoutAccount = td.getPayoutAccount();
@@ -180,11 +181,6 @@ public class TimeDepositServiceImpl implements TimeDepositService {
             // create tx for this
             timeDepositRepository.save(td);
         }
-    }
-
-    private BigDecimal getWithholdingTax(BigDecimal grossMaturityInterestEarned) {
-        return grossMaturityInterestEarned
-                .multiply(ConstantValues.WITHHOLDING_TAX);
     }
 
     @Transactional

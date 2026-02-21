@@ -32,16 +32,10 @@ public class AccountDailyBalance {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    @Column(name = "account_type")
-    private AccountType accountType;
-
-    public AccountDailyBalance(Account account, BigDecimal closingBalance, AccountType accountType) {
+    public AccountDailyBalance(Account account, BigDecimal closingBalance) {
         this.account = account;
         this.closingBalance = closingBalance;
         this.date = LocalDate.now(ConstantValues.BANK_ZONE);
-        this.accountType = accountType;
     }
 
     public Long getId() {
@@ -76,11 +70,4 @@ public class AccountDailyBalance {
         this.date = date;
     }
 
-    public AccountType getAccountType() {
-        return accountType;
-    }
-
-    public void setAccountType(AccountType accountType) {
-        this.accountType = accountType;
-    }
 }

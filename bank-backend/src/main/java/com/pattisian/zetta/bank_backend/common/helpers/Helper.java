@@ -62,4 +62,9 @@ public final class Helper {
     public static boolean isOpeningBalanceEnough(BigDecimal openingAmount) {
         return ConstantValues.MINIMUM_BALANCE.compareTo(openingAmount) < 0;
     }
+
+    public static BigDecimal getWithholdingTax(BigDecimal grossAmount) {
+        return grossAmount
+                .multiply(ConstantValues.WITHHOLDING_TAX);
+    }
 }

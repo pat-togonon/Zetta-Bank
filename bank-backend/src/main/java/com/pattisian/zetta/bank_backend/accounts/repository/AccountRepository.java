@@ -18,6 +18,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a WHERE a.status = com.pattisian.zetta.bank_backend.accounts.enums.Status.ACTIVE")
     public List<Account> getAllAccounts();
 
+    @Query("SELECT a FROM Account a WHERE a.status = com.pattisian.zetta.bank_backend.accounts.enums.Status.ACTIVE AND a.accountType = com.pattisian.zetta.bank_backend.accounts.enums.AccountType.SAVINGS")
+    public List<Account> getAllActiveSavingsAccounts();
+
     @Query("SELECT a FROM Account a WHERE a.user = :user AND a.status = com.pattisian.zetta.bank_backend.accounts.enums.Status.ACTIVE")
     public List<Account> getAllAccountsByUser(@Param("user") User user);
 

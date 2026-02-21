@@ -6,13 +6,18 @@ import com.pattisian.zetta.bank_backend.accounts.repository.AccountDailyBalanceR
 import com.pattisian.zetta.bank_backend.accounts.repository.AccountRepository;
 import com.pattisian.zetta.bank_backend.accounts.service.AccountDailyBalanceService;
 import com.pattisian.zetta.bank_backend.common.ConstantValues;
+import com.pattisian.zetta.bank_backend.common.helpers.Helper;
 import jakarta.transaction.Transactional;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountDailyBalanceServiceImpl implements AccountDailyBalanceService {
@@ -35,10 +40,44 @@ public class AccountDailyBalanceServiceImpl implements AccountDailyBalanceServic
                 .filter(ac -> accountDailyBalanceRepository
                         .findByAccountAndDate(ac, LocalDate.now(ConstantValues.BANK_ZONE))
                         .isEmpty())
-                .map(ac -> new AccountDailyBalance(ac, ac.getAvailableBalance(), ac.getAccountType()))
-                .collect(Collectors.toList());
+                .map(ac -> new AccountDailyBalance(ac, ac.getAvailableBalance()))
+                .toList();
 
         accountDailyBalanceRepository.saveAll(adbOfAllActiveAccounts);
+    }
+
+    @Transactional
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 5000)
+    )
+    @Override
+    public void processMonthlySavingsInterest() {
+
+        LocalDate today = LocalDate.now(ConstantValues.BANK_ZONE);
+        YearMonth prevMonth = YearMonth.from(today).minusMonths(1);
+        LocalDate startDate = prevMonth.atDay(1);
+        LocalDate endDate = prevMonth.atEndOfMonth();
+
+        List<Account> allActiveSavingsAccount = accountRepository.getAllActiveSavingsAccounts();
+
+        for (Account ac : allActiveSavingsAccount) {
+            BigDecimal sumOfMonthlyAdb = accountDailyBalanceRepository.getSumOfClosingBalances(ac, startDate, endDate);
+
+            BigDecimal grossInterestEarned = sumOfMonthlyAdb
+                    .multiply(ac.getInterestRatePerAnnum())
+                    .divide(BigDecimal.valueOf(365), 8, RoundingMode.HALF_EVEN);
+
+            grossInterestEarned = grossInterestEarned.setScale(2, RoundingMode.HALF_EVEN);
+
+            BigDecimal netInterestEarned = grossInterestEarned
+                    .subtract(Helper.getWithholdingTax(grossInterestEarned));
+
+            ac.addAmountToBalance(netInterestEarned);
+            // create transaction for this
+        }
+
+        accountRepository.saveAll(allActiveSavingsAccount);
     }
 
 
