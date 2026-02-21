@@ -34,4 +34,5 @@ public final class ConstantValues {
 
     public static final BigDecimal WITHHOLDING_TAX = new BigDecimal("0.20");
 
+    public static final long DAYS_IN_A_YEAR = 365;
 }

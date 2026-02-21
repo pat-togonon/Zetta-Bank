@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.YearMonth;
 
 @Entity
 @Table(name = "accounts")
@@ -70,6 +71,9 @@ public class Account {
 
     @Transient
     private String accountTypeCode;
+
+    @Column(name = "last_interest_credited_month")
+    private YearMonth lastInterestCreditedMonth;
 
     public Account() {
     }
@@ -199,6 +203,14 @@ public class Account {
 
     public Long getVersion() {
         return version;
+    }
+
+    public YearMonth getLastInterestCreditedMonth() {
+        return lastInterestCreditedMonth;
+    }
+
+    public void setLastInterestCreditedMonth(YearMonth lastInterestCreditedMonth) {
+        this.lastInterestCreditedMonth = lastInterestCreditedMonth;
     }
 
     @Override

@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountDailyBalanceServiceImpl implements AccountDailyBalanceService {
@@ -59,14 +60,17 @@ public class AccountDailyBalanceServiceImpl implements AccountDailyBalanceServic
         LocalDate startDate = prevMonth.atDay(1);
         LocalDate endDate = prevMonth.atEndOfMonth();
 
-        List<Account> allActiveSavingsAccount = accountRepository.getAllActiveSavingsAccounts();
+        List<Account> allActiveSavingsAccount = accountRepository.getAllActiveSavingsAccounts()
+                .stream()
+                .filter(ac -> ac.getLastInterestCreditedMonth() == null || !ac.getLastInterestCreditedMonth().equals(prevMonth))
+                .toList();
 
         for (Account ac : allActiveSavingsAccount) {
             BigDecimal sumOfMonthlyAdb = accountDailyBalanceRepository.getSumOfClosingBalances(ac, startDate, endDate);
 
             BigDecimal grossInterestEarned = sumOfMonthlyAdb
                     .multiply(ac.getInterestRatePerAnnum())
-                    .divide(BigDecimal.valueOf(365), 8, RoundingMode.HALF_EVEN);
+                    .divide(BigDecimal.valueOf(ConstantValues.DAYS_IN_A_YEAR), 8, RoundingMode.HALF_EVEN);
 
             grossInterestEarned = grossInterestEarned.setScale(2, RoundingMode.HALF_EVEN);
 
@@ -74,6 +78,7 @@ public class AccountDailyBalanceServiceImpl implements AccountDailyBalanceServic
                     .subtract(Helper.getWithholdingTax(grossInterestEarned));
 
             ac.addAmountToBalance(netInterestEarned);
+            ac.setLastInterestCreditedMonth(prevMonth);
             // create transaction for this
         }
 
