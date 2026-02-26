@@ -2,6 +2,7 @@ package com.pattisian.zetta.bank_backend.accounts.entity;
 
 import com.pattisian.zetta.bank_backend.accounts.enums.AccountType;
 import com.pattisian.zetta.bank_backend.accounts.enums.Status;
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.enums.Currency;
 import com.pattisian.zetta.bank_backend.common.exception.InsufficientBalanceException;
 import com.pattisian.zetta.bank_backend.common.exception.NegativeAmountException;
@@ -55,12 +56,6 @@ public class Account {
     @Column(name = "closed_at")
     private Instant closedAt;
 
-    @Transient
-    public static final String BANK_CODE = "ZT";
-
-    @Transient
-    public static final String BRANCH_CODE = "001";
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull
@@ -111,7 +106,7 @@ public class Account {
     }
 
     public String generateAccountNumber() {
-        return Helper.generateAccountNumber(this.accountTypeCode, BANK_CODE, BRANCH_CODE, this.openingDate);
+        return Helper.generateAccountNumber(this.accountTypeCode, ConstantValues.BANK_CODE, ConstantValues.BRANCH_CODE, this.openingDate);
     }
 
     public BigDecimal getAvailableBalance() {

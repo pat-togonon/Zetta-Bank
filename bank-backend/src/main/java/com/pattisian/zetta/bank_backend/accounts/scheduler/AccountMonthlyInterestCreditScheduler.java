@@ -14,7 +14,7 @@ public class AccountMonthlyInterestCreditScheduler {
         this.accountDailyBalanceService = accountDailyBalanceService;
     }
 
-    @Scheduled(cron = "0 5 0 1 * *", zone = "Asia/Manila")
+    @Scheduled(cron = "0 5 0 1 * *", zone = "Asia/Manila") // every 12:05 am first day of the month
     public void creditMonthlySavingsAccountInterestEarned() {
         accountDailyBalanceService.processMonthlySavingsInterest();
     }

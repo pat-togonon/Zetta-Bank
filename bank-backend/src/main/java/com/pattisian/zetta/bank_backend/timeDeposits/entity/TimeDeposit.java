@@ -138,7 +138,7 @@ public class TimeDeposit {
 
     public String generateReferenceNumber() {
         Instant valueDate = this.valueDate.atStartOfDay(ConstantValues.BANK_ZONE).toInstant();
-        return Helper.generateAccountNumber(TD_TYPE_CODE, Account.BANK_CODE, Account.BRANCH_CODE, valueDate);
+        return Helper.generateAccountNumber(TD_TYPE_CODE, ConstantValues.BANK_CODE, ConstantValues.BRANCH_CODE, valueDate);
     }
 
     public User getUser() {

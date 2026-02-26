@@ -1,6 +1,8 @@
 package com.pattisian.zetta.bank_backend.transactions.entity;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
+import com.pattisian.zetta.bank_backend.common.ConstantValues;
+import com.pattisian.zetta.bank_backend.common.exception.InsufficientBalanceException;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
 import com.pattisian.zetta.bank_backend.timeDeposits.entity.TimeDeposit;
 import com.pattisian.zetta.bank_backend.transactions.enums.Status;
@@ -13,15 +15,12 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-// For all status, might need better checks. If Id is generated, PostConstruct Status e.g
-
 // Also check out @EntityListeners(AuditingEntityListener.class)
-
-// For constants - can create a class to store all that
 
 @Entity
 @Table(name = "transactions")
-public class Transaction {
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,35 +42,6 @@ public class Transaction {
     @NotNull
     @JoinColumn(name = "user_id")
     private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "source_account_id")
-    private Account sourceAccount;
-
-    // for internal transactions - account to account
-    @ManyToOne
-    @JoinColumn(name = "internal_destination_account_id")
-    private Account internalFundTransferDestinationAccount;
-
-    //for external bank account transactions
-
-    @Column(name = "external_destination_bank_id")
-    private Long externalDestinationBankId;
-
-    @Column(name = "external_destination_account_number")
-    private String externalDestinationAccountNumber;
-
-    @Column(name = "external_destination_account_name")
-    private String externalDestinationAccountName;
-
-    // for Bill Payment
-    @Column(name = "biller_id")
-    private Long billerId;
-
-    // for Time Depo
-    @ManyToOne
-    @JoinColumn(name = "related_time_deposit_id")
-    private TimeDeposit relatedTimeDeposit;
 
     @Column(nullable = false, precision = 18, scale = 2)
     @NotNull
@@ -96,40 +66,41 @@ public class Transaction {
     @NotBlank
     private String ipAddress;
 
-    @Transient
-    private static final String TX_CODE = "TX";
-
     public Transaction() {
+    }
+
+    public Transaction(TransactionType type, User user, BigDecimal amount, BigDecimal balanceBeforeTransaction) {
+        if (balanceBeforeTransaction.subtract(amount).signum() == -1) {
+            throw new InsufficientBalanceException("Account does not have a sufficient balance for this bill payment.");
+        }
+        this.type = type;
+        this.user = user;
+        this.amount = amount;
+        this.createdAt = Instant.now();
+        this.referenceNumber = Helper.generateAccountNumber(ConstantValues.TX_CODE, ConstantValues.BANK_CODE, ConstantValues.BRANCH_CODE, this.createdAt);
+        // ipAddress
+        // isFraudulent
+        this.balanceBeforeTransaction = balanceBeforeTransaction;
+        this.balanceAfterTransaction = balanceBeforeTransaction.subtract(this.amount);
     }
 
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public TransactionType getType() {
         return type;
-    }
-
-    public void setType(TransactionType type) {
-        this.type = type;
     }
 
     public String getReferenceNumber() {
         return referenceNumber;
     }
 
-    public String generateReferenceNumber() {
-       return Helper.generateAccountNumber(TX_CODE, Account.BANK_CODE, Account.BRANCH_CODE, createdAt);
-    }
-
     public Status getStatus() {
         return status;
     }
 
+    // need to set after tx pushes through ?
     public void setStatus(Status status) {
         this.status = status;
     }
@@ -140,62 +111,6 @@ public class Transaction {
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public Account getSourceAccount() {
-        return sourceAccount;
-    }
-
-    public void setSourceAccount(Account sourceAccount) {
-        this.sourceAccount = sourceAccount;
-    }
-
-    public Account getInternalFundTransferDestinationAccount() {
-        return internalFundTransferDestinationAccount;
-    }
-
-    public void setInternalFundTransferDestinationAccount(Account internalFundTransferDestinationAccount) {
-        this.internalFundTransferDestinationAccount = internalFundTransferDestinationAccount;
-    }
-
-    public Long getExternalDestinationBankId() {
-        return externalDestinationBankId;
-    }
-
-    public void setExternalDestinationBankId(Long externalDestinationBankId) {
-        this.externalDestinationBankId = externalDestinationBankId;
-    }
-
-    public String getExternalDestinationAccountNumber() {
-        return externalDestinationAccountNumber;
-    }
-
-    public void setExternalDestinationAccountNumber(String externalDestinationAccountNumber) {
-        this.externalDestinationAccountNumber = externalDestinationAccountNumber;
-    }
-
-    public String getExternalDestinationAccountName() {
-        return externalDestinationAccountName;
-    }
-
-    public void setExternalDestinationAccountName(String externalDestinationAccountName) {
-        this.externalDestinationAccountName = externalDestinationAccountName;
-    }
-
-    public Long getBillerId() {
-        return billerId;
-    }
-
-    public void setBillerId(Long billerId) {
-        this.billerId = billerId;
-    }
-
-    public TimeDeposit getRelatedTimeDeposit() {
-        return relatedTimeDeposit;
-    }
-
-    public void setRelatedTimeDeposit(TimeDeposit relatedTimeDeposit) {
-        this.relatedTimeDeposit = relatedTimeDeposit;
     }
 
     public BigDecimal getAmount() {
@@ -245,141 +160,4 @@ public class Transaction {
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
     }
-
-    public static class Builder {
-
-        private TransactionType type;
-
-        private Status status;
-
-        private User user;
-
-        private Account sourceAccount;
-
-        private Account internalFundTransferDestinationAccount;
-
-        private Long externalDestinationBankId;
-
-        private String externalDestinationAccountNumber;
-
-        private String externalDestinationAccountName;
-
-        private Long billerId;
-
-        private TimeDeposit relatedTimeDeposit;
-
-        private BigDecimal amount;
-
-        private BigDecimal balanceBeforeTransaction;
-
-        private BigDecimal balanceAfterTransaction;
-
-        private boolean isFraudulent;
-
-        private String ipAddress;
-
-        private Instant createdAt;
-
-        public Builder(
-                TransactionType type,
-                BigDecimal amount,
-                String ipAddress
-        ) {
-            this.type = type;
-            this.amount = amount;
-            this.createdAt = Instant.now();
-            this.ipAddress = ipAddress;
-        }
-
-        public Builder status(Status status) {
-            this.status = status;
-            return this;
-        }
-        public Builder sourceAccount(Account sourceAccount) {
-            this.sourceAccount = sourceAccount;
-            return this;
-        }
-
-        public Builder setUser(User user) {
-            this.user = user;
-            return this;
-        }
-        public Builder setInternalFundTransferDestinationAccount(Account internalFundTransferDestinationAccount) {
-            this.internalFundTransferDestinationAccount = internalFundTransferDestinationAccount;
-            return this;
-        }
-
-        public Builder setExternalDestinationBankId(Long externalDestinationBankId) {
-            this.externalDestinationBankId = externalDestinationBankId;
-            return this;
-        }
-
-        public Builder setExternalDestinationAccountNumber(String externalDestinationAccountNumber) {
-            this.externalDestinationAccountNumber = externalDestinationAccountNumber;
-            return this;
-        }
-
-        public Builder setExternalDestinationAccountName(String externalDestinationAccountName) {
-            this.externalDestinationAccountName = externalDestinationAccountName;
-            return this;
-        }
-
-        public Builder setBillerId(Long billerId) {
-            this.billerId = billerId;
-            return this;
-        }
-
-        public Builder setRelatedTimeDeposit(TimeDeposit relatedTimeDeposit) {
-            this.relatedTimeDeposit = relatedTimeDeposit;
-            return this;
-        }
-
-        public Builder setBalanceBeforeTransaction(BigDecimal balanceBeforeTransaction) {
-            this.balanceBeforeTransaction = balanceBeforeTransaction;
-            return this;
-        }
-
-        public Builder setBalanceAfterTransaction(BigDecimal balanceAfterTransaction) {
-            this.balanceAfterTransaction = balanceAfterTransaction;
-            return this;
-        }
-
-        public Builder setIsFraudulent(boolean isFraudulent) {
-            this.isFraudulent = isFraudulent;
-            return this;
-        }
-
-        public Transaction build() {
-            return new Transaction(this);
-        }
-    }
-
-    public static Builder builder(
-            TransactionType type,
-            BigDecimal amount,
-            String ipAddress
-    ) {
-        return new Builder(type, amount, ipAddress);
-    }
-
-    private Transaction(Builder builder) {
-        this.type = builder.type;
-        this.status = builder.status;
-        this.user = builder.user;
-        this.sourceAccount = builder.sourceAccount;
-        this.internalFundTransferDestinationAccount = builder.internalFundTransferDestinationAccount;
-        this.externalDestinationBankId = builder.externalDestinationBankId;
-        this.externalDestinationAccountNumber = builder.externalDestinationAccountNumber;
-        this.externalDestinationAccountName = builder.externalDestinationAccountName;
-        this.billerId = builder.billerId;
-        this.relatedTimeDeposit = builder.relatedTimeDeposit;
-        this.amount = builder.amount;
-        this.balanceBeforeTransaction = builder.balanceBeforeTransaction;
-        this.balanceAfterTransaction = builder.balanceAfterTransaction;
-        this.isFraudulent = builder.isFraudulent;
-        this.ipAddress = builder.ipAddress;
-        this.createdAt = builder.createdAt;
-        this.referenceNumber = generateReferenceNumber();
-    }
-
 }

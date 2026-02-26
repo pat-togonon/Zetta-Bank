@@ -18,7 +18,7 @@ public class AccountDailyBalanceScheduler {
         this.accountDailyBalanceService = accountDailyBalanceService;
     }
 
-    @Scheduled(cron = "0 0 0/4 * * *", zone = "Asia/Manila")
+    @Scheduled(cron = "0 0 0/4 * * *", zone = "Asia/Manila") // every 4 hours
     public void handleAccountDailyBalanceSnapshots() {
         this.processAccountDailyBalanceSnapshotsAsync();
     }

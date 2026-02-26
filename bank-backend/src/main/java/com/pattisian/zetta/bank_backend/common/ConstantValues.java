@@ -1,6 +1,7 @@
 package com.pattisian.zetta.bank_backend.common;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
 import java.time.ZoneId;
@@ -35,4 +36,10 @@ public final class ConstantValues {
     public static final BigDecimal WITHHOLDING_TAX = new BigDecimal("0.20");
 
     public static final long DAYS_IN_A_YEAR = 365;
+
+    public static final String TX_CODE = "TX";
+
+    public static final String BANK_CODE = "ZT";
+
+    public static final String BRANCH_CODE = "001";
 }
