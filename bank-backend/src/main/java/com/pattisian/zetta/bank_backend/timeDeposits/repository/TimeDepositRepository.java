@@ -29,7 +29,7 @@ public interface TimeDepositRepository extends JpaRepository<TimeDeposit, Long> 
     List<TimeDeposit> getAllTimeDepositsByUser(User user);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT t FROM TimeDeposit t WHERE t.user = :user AND t.id = :id")
+    @Query("SELECT t FROM TimeDeposit t JOIN FETCH t.payoutAccount WHERE t.user = :user AND t.id = :id")
     Optional<TimeDeposit> getTimeDepositById(@Param("user") User user, @Param("id") Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

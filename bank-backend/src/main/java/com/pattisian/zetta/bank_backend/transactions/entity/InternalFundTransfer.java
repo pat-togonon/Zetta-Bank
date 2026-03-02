@@ -1,42 +1,52 @@
 package com.pattisian.zetta.bank_backend.transactions.entity;
 
+import com.pattisian.zetta.bank_backend.accounts.entity.Account;
+import com.pattisian.zetta.bank_backend.transactions.enums.TransactionType;
+import com.pattisian.zetta.bank_backend.users.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
 
 @Entity
 @PrimaryKeyJoinColumn(name = "id")
 public class InternalFundTransfer extends Transaction {
 
-    @Column(name = "source_account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_account_id", nullable = false)
     @NotNull
-    private Long sourceAccountId;
+    private Account sourceAccount;
 
-    @Column(name = "internal_destination_account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "internal_destination_account_id", nullable = false)
     @NotNull
-    private Long internalDestinationAccountId;
+    private Account internalDestinationAccount;
 
     public InternalFundTransfer() {
-        super();
+
     }
 
-    public InternalFundTransfer(Long sourceAccountId, Long internalDestinationAccountId) {
-        this.sourceAccountId = sourceAccountId;
-        this.internalDestinationAccountId = internalDestinationAccountId;
+    // TransactionType type, User user, BigDecimal amount, BigDecimal balanceBeforeTransaction
+    public InternalFundTransfer(Account sourceAccount, Account internalDestinationAccount, User user, BigDecimal amount, BigDecimal balanceAfterTransaction) {
+        super(TransactionType.INTERNAL_FUND_TRANSFER, user, amount, sourceAccount.getAvailableBalance(), balanceAfterTransaction);
+
+        this.sourceAccount = sourceAccount;
+        this.internalDestinationAccount = internalDestinationAccount;
     }
 
-    public Long getSourceAccountId() {
-        return sourceAccountId;
+    public Account getSourceAccount() {
+        return sourceAccount;
     }
 
-    public void setSourceAccountId(Long sourceAccountId) {
-        this.sourceAccountId = sourceAccountId;
+    public void setSourceAccount(Account sourceAccount) {
+        this.sourceAccount = sourceAccount;
     }
 
-    public Long getInternalDestinationAccount() {
-        return internalDestinationAccountId;
+    public Account getInternalDestinationAccount() {
+        return internalDestinationAccount;
     }
 
-    public void setInternalDestinationAccount(Long internalDestinationAccountId) {
-        this.internalDestinationAccountId = this.internalDestinationAccountId;
+    public void setInternalDestinationAccount(Account internalDestinationAccount) {
+        this.internalDestinationAccount = internalDestinationAccount;
     }
 }

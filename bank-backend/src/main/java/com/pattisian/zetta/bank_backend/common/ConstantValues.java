@@ -42,4 +42,6 @@ public final class ConstantValues {
     public static final String BANK_CODE = "ZT";
 
     public static final String BRANCH_CODE = "001";
+
+    public static final String INTEREST_CREDIT_ORIGIN = "ZETTA";
 }

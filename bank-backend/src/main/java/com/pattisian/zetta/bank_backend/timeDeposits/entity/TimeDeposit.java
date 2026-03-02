@@ -27,7 +27,7 @@ public class TimeDeposit {
     @NotBlank
     private String referenceNumber;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @NotNull
     private User user;
@@ -53,12 +53,12 @@ public class TimeDeposit {
     @NotNull
     private LocalDate maturityDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_account_id", nullable = false)
     @NotNull
     private Account sourceAccount;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payout_account_id", nullable = false)
     @NotNull
     private Account payoutAccount;

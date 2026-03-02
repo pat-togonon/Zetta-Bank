@@ -21,7 +21,7 @@ public class Favorite {
     @Column(nullable = false)
     private FavoriteType type;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull
     private User user;

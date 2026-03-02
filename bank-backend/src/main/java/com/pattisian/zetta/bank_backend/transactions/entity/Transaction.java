@@ -1,10 +1,8 @@
 package com.pattisian.zetta.bank_backend.transactions.entity;
 
-import com.pattisian.zetta.bank_backend.accounts.entity.Account;
 import com.pattisian.zetta.bank_backend.common.ConstantValues;
 import com.pattisian.zetta.bank_backend.common.exception.InsufficientBalanceException;
 import com.pattisian.zetta.bank_backend.common.helpers.Helper;
-import com.pattisian.zetta.bank_backend.timeDeposits.entity.TimeDeposit;
 import com.pattisian.zetta.bank_backend.transactions.enums.Status;
 import com.pattisian.zetta.bank_backend.transactions.enums.TransactionType;
 import com.pattisian.zetta.bank_backend.users.entity.User;
@@ -69,10 +67,7 @@ public abstract class Transaction {
     public Transaction() {
     }
 
-    public Transaction(TransactionType type, User user, BigDecimal amount, BigDecimal balanceBeforeTransaction) {
-        if (balanceBeforeTransaction.subtract(amount).signum() == -1) {
-            throw new InsufficientBalanceException("Account does not have a sufficient balance for this bill payment.");
-        }
+    public Transaction(TransactionType type, User user, BigDecimal amount, BigDecimal balanceBeforeTransaction, BigDecimal balanceAfterTransaction) {
         this.type = type;
         this.user = user;
         this.amount = amount;
@@ -81,7 +76,8 @@ public abstract class Transaction {
         // ipAddress
         // isFraudulent
         this.balanceBeforeTransaction = balanceBeforeTransaction;
-        this.balanceAfterTransaction = balanceBeforeTransaction.subtract(this.amount);
+        this.balanceAfterTransaction = balanceAfterTransaction;
+        // status?
     }
 
     public Long getId() {

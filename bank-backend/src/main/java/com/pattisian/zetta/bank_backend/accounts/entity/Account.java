@@ -35,7 +35,7 @@ public class Account {
     @NotNull
     private BigDecimal availableBalance;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

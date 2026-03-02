@@ -1,6 +1,8 @@
 package com.pattisian.zetta.bank_backend.transactions.entity;
 
 import com.pattisian.zetta.bank_backend.accounts.entity.Account;
+import com.pattisian.zetta.bank_backend.billers.entity.Biller;
+import com.pattisian.zetta.bank_backend.common.exception.InsufficientBalanceException;
 import com.pattisian.zetta.bank_backend.transactions.enums.TransactionType;
 import com.pattisian.zetta.bank_backend.users.entity.User;
 import jakarta.persistence.*;
@@ -13,13 +15,15 @@ import java.math.BigDecimal;
 @PrimaryKeyJoinColumn(name = "id")
 public class BillPayment extends Transaction {
 
-    @Column(name = "source_account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_account_id", nullable = false)
     @NotNull
-    private Long sourceAccountId;
+    private Account sourceAccount;
 
-    @Column(name = "biller_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "biller_id", nullable = false)
     @NotNull
-    private Long billerId;
+    private Biller biller;
 
     @Column(name = "bill_account_number", nullable = false)
     @NotBlank
@@ -30,33 +34,33 @@ public class BillPayment extends Transaction {
     private String billAccountName;
 
     public BillPayment() {
-        super();
+
     }
 
     // TransactionType type, User user, BigDecimal amount, BigDecimal balanceBeforeTransaction
-    public BillPayment(Long sourceAccountId, BigDecimal balanceBeforeTransaction, Long billerId, String billAccountNumber, String billAccountName, User user, BigDecimal amount) {
-        super(TransactionType.BILL_PAYMENT, user, amount, balanceBeforeTransaction);
+    public BillPayment(Account sourceAccount, Biller biller, String billAccountNumber, String billAccountName, User user, BigDecimal amount, BigDecimal balanceAfterTransaction) {
+        super(TransactionType.BILL_PAYMENT, user, amount, sourceAccount.getAvailableBalance(), balanceAfterTransaction);
 
-        this.sourceAccountId = sourceAccountId;
-        this.billerId = billerId;
+        this.sourceAccount = sourceAccount;
+        this.biller = biller;
         this.billAccountNumber = billAccountNumber;
         this.billAccountName = billAccountName;
     }
 
-    public Long getSourceAccountId() {
-        return sourceAccountId;
+    public Account getSourceAccount() {
+        return sourceAccount;
     }
 
-    public void setSourceAccountId(Long sourceAccountId) {
-        this.sourceAccountId = sourceAccountId;
+    public void setSourceAccount(Account sourceAccount) {
+        this.sourceAccount = sourceAccount;
     }
 
-    public Long getBiller() {
-        return billerId;
+    public Biller getBiller() {
+        return biller;
     }
 
-    public void setBiller(Long billerId) {
-        this.billerId = billerId;
+    public void setBiller(Biller billerId) {
+        this.biller = billerId;
     }
 
     public String getBillAccountNumber() {
